@@ -39,10 +39,6 @@ export default function LoginPage() {
              alt="Toko Dian Sehat" 
              className="h-full w-full object-cover"
            />
-           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-           <div className="absolute bottom-4 left-6 text-white">
-             <p className="text-xs text-gray-200 shadow-sm">Sistem Inventori Toko Dian Sehat</p>
-           </div>
         </div>
 
         <div className="p-8 pt-6">
