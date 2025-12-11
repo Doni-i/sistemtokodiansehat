@@ -33,18 +33,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
         
-        {/* === BANNER TOKO (FIXED PATH) === */}
         <div className="h-40 w-full bg-green-50 relative">
-           {/* Perhatikan src-nya: langsung /banner.png */}
            <img 
-             src="/banner.png" 
+             src="/banner.jpg" 
              alt="Toko Dian Sehat" 
              className="h-full w-full object-cover"
            />
-           {/* Gradient Overlay biar teks putih terbaca */}
            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
            <div className="absolute bottom-4 left-6 text-white">
-             <h2 className="text-2xl font-bold shadow-sm">Admin Portal</h2>
              <p className="text-xs text-gray-200 shadow-sm">Sistem Inventori Toko Dian Sehat</p>
            </div>
         </div>
