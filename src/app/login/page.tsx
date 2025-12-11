@@ -24,7 +24,7 @@ export default function LoginPage() {
       alert('Login Gagal: ' + error.message)
       setLoading(false)
     } else {
-      router.push('/inventory') // Redirect ke halaman stok
+      router.push('/inventory') 
       router.refresh()
     }
   }
@@ -33,18 +33,19 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
         
-        {/* banner toko */}
-        <div className="h-32 w-full bg-green-50 relative">
+        {/* === BANNER TOKO (FIXED PATH) === */}
+        <div className="h-40 w-full bg-green-50 relative">
+           {/* Perhatikan src-nya: langsung /banner.png */}
            <img 
-             src="../../public/banner.jpg" 
+             src="/banner.png" 
              alt="Toko Dian Sehat" 
              className="h-full w-full object-cover"
            />
-           {/* gradient */}
-           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+           {/* Gradient Overlay biar teks putih terbaca */}
+           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
            <div className="absolute bottom-4 left-6 text-white">
-             <h2 className="text-xl font-bold">Admin Portal</h2>
-             <p className="text-xs text-gray-200">Silakan login untuk mengelola stok</p>
+             <h2 className="text-2xl font-bold shadow-sm">Admin Portal</h2>
+             <p className="text-xs text-gray-200 shadow-sm">Sistem Inventori Toko Dian Sehat</p>
            </div>
         </div>
 
@@ -57,7 +58,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 focus:border-green-500 focus:ring-green-500"
-                placeholder="admin@diansehat.com"
+                placeholder="ketik alamat email anda di sini"
                 required
               />
             </div>
@@ -68,7 +69,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 p-2.5 text-gray-900 focus:border-green-500 focus:ring-green-500"
-                placeholder="••••••••"
+                placeholder="ketik password anda di sini"
                 required
               />
             </div>
