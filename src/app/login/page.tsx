@@ -36,7 +36,7 @@ export default function LoginPage() {
         {/* --- BANNER TOKO --- */}
         <div className="h-32 w-full bg-green-50 relative">
            <img 
-             src="/banner.png" 
+             src="../../public/banner.png" 
              alt="Toko Dian Sehat" 
              className="h-full w-full object-cover"
            />
