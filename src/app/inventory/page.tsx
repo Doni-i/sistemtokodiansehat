@@ -7,7 +7,7 @@ import { ScanBarcode, Search, LogOut, Plus, X, Save } from 'lucide-react'
 
 export default function InventoryPage() {
   const [stokList, setStokList] = useState<any[]>([])
-  const [obatList, setObatList] = useState<any[]>([]) // List nama obat untuk dropdown
+  const [obatList, setObatList] = useState<any[]>([]) // List nama oba
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false) // Modal state
@@ -43,7 +43,7 @@ export default function InventoryPage() {
       `)
     if (stok) setStokList(stok)
 
-    // Ambil Data Master Obat (Untuk Dropdown Form)
+    // Ambil Data Master Obat 
     const { data: obat } = await supabase.from('obat').select('id, nama_obat')
     if (obat) setObatList(obat)
 
@@ -61,7 +61,7 @@ export default function InventoryPage() {
     setLoading(true)
 
     try {
-      // A. Insert ke Batch dulu
+      // A. Insert ke Batch
       const { data: batchData, error: batchError } = await supabase
         .from('batch_obat')
         .insert({
@@ -85,8 +85,8 @@ export default function InventoryPage() {
 
       if (stokError) throw stokError
 
-      // C. Catat History Transaksi (Audit Trail)
-      // Kita perlu ID admin (auth user)
+      // C. Catat Histori Transaksi (Audit Trail)
+      // ID admin (auth user)
       const { data: { user } } = await supabase.auth.getUser()
       // Cari profil admin berdasarkan auth_id
       const { data: adminProfile } = await supabase.from('profil_admin').select('id').eq('auth_id', user?.id).single()
