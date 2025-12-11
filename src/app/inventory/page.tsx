@@ -128,8 +128,8 @@ export default function InventoryPage() {
         {/* --- HEADER --- */}
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gudang Obat</h1>
-            <p className="text-gray-500">Sistem Inventori Toko Dian Sehat</p>
+            <h1 className="text-3xl font-bold text-gray-900">Toko Dian Sehat</h1>
+            <p className="text-gray-500">Inventori Obat Toko</p>
           </div>
           <div className="flex gap-3">
             <button 
