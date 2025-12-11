@@ -33,14 +33,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
         
-        {/* --- BANNER TOKO --- */}
+        {/* banner toko */}
         <div className="h-32 w-full bg-green-50 relative">
            <img 
              src="../../public/banner.png" 
              alt="Toko Dian Sehat" 
              className="h-full w-full object-cover"
            />
-           {/* Overlay Gradient biar teks kebaca (opsional, tapi estetik) */}
+           {/* gradient */}
            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
            <div className="absolute bottom-4 left-6 text-white">
              <h2 className="text-xl font-bold">Admin Portal</h2>
