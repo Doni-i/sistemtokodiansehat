@@ -8,24 +8,41 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        // Warna diambil dari identitas spanduk Toko Dian Sehat
+        ds: {
+          green: {
+             DEFAULT: '#006837', // Hijau tua dominan di logo DS
+             dark: '#004d29',
+             light: '#008f4d'
+          },
+          red: {
+            DEFAULT: '#E30613', // Merah aksen pada teks DIANSEHAT
+          },
+          gold: {
+            DEFAULT: '#FDB913', // Kuning/Emas pada teks PAGUJATEN
+          },
+          cream: '#FAFAFA' // Latar belakang bersih
+        }
+      },
+      // Animasi ringan untuk "denyut" data, aman untuk LibreWolf
       keyframes: {
-        'spin-slow': {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' },
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
         },
-        'spin-reverse-slow': {
-          '0%': { transform: 'rotate(360deg)' },
-          '100%': { transform: 'rotate(0deg)' },
+        'ping-slow': {
+          '75%, 100%': { transform: 'scale(2)', opacity: '0' },
         },
-        'pulse-slow': {
-          '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
-          '50%': { opacity: '0.4', transform: 'scale(0.95)' },
+         marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
       animation: {
-        'spin-slow': 'spin-slow 20s linear infinite',
-        'spin-reverse-slow': 'spin-reverse-slow 25s linear infinite',
-        'pulse-slow': 'pulse-slow 4s ease-in-out infinite',
+        'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite',
+        'ping-slow': 'ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+        marquee: 'marquee 25s linear infinite',
       },
     },
   },
