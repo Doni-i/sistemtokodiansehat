@@ -19,12 +19,6 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button 
-            onClick={toggleTheme}
-            className="rounded-full p-2 text-secondary-500 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-white/10 transition-all"
-          >
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
           <div className="hidden text-sm font-medium text-secondary-500 md:block dark:text-secondary-400">
             Pejaten Branch v2.0
           </div>
