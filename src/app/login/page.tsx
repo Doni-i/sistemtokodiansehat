@@ -110,7 +110,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full rounded-xl border border-secondary-200 bg-white/50 p-3 pl-10 text-sm text-secondary-900 placeholder-secondary-400 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-900"
-                    placeholder="nama@diansehat.id"
+                    placeholder="masukkan email anda"
                     required
                   />
                 </div>
@@ -127,7 +127,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full rounded-xl border border-secondary-200 bg-white/50 p-3 pl-10 text-sm text-secondary-900 placeholder-secondary-400 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-900"
-                    placeholder="••••••••"
+                    placeholder="masukkan password anda"
                     required
                   />
                 </div>
