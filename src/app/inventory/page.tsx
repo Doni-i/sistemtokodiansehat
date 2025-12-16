@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import GridBackground from '@/components/background/GridBackground'
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts'
 
 export default function InventoryPage() {
@@ -36,13 +36,13 @@ export default function InventoryPage() {
   const router = useRouter()
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // --- 1. FETCH DATA (Stok & Grafik) ---
+  // --- 1. FETCH DATA ---
   const fetchData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return router.push('/login')
 
-    // A. Ambil Data Stok (Filter Soft Delete)
+    // A. Ambil Data Stok (Hanya yang belum dihapus/soft delete)
     const { data: stok } = await supabase
       .from('stok_obat')
       .select(`
@@ -52,55 +52,28 @@ export default function InventoryPage() {
           obat (id, nama_obat, satuan, harga_jual)
         )
       `)
-      .is('dihapus_pada', null) // Hanya ambil yang belum dihapus
+      .is('dihapus_pada', null) 
       .order('id', { ascending: false })
     
     if (stok) setStokList(stok)
 
-    // B. Ambil Data Transaksi untuk Grafik (Realtime dari Supabase)
-    // Kita ambil data transaksi masuk/keluar untuk divisualisasikan
-    const { data: transaksi } = await supabase
-      .from('transaksi_inventori')
-      .select('created_at, tipe_transaksi, kuantitas')
-      .order('created_at', { ascending: true })
+    // B. Data Dummy untuk Grafik RGB (Agar Presentasi Cantik)
+    // Nanti bisa diganti dengan query real ke tabel transaksi_inventori
+    setChartData([
+      { name: 'Jan', masuk: 240, keluar: 150 },
+      { name: 'Feb', masuk: 139, keluar: 200 },
+      { name: 'Mar', masuk: 980, keluar: 350 },
+      { name: 'Apr', masuk: 390, keluar: 450 },
+      { name: 'Mei', masuk: 480, keluar: 380 },
+      { name: 'Jun', masuk: 380, keluar: 420 },
+      { name: 'Jul', masuk: 430, keluar: 310 },
+    ])
 
-    if (transaksi && transaksi.length > 0) {
-      // Proses Aggregasi Data per Bulan (Logic sederhana untuk demo)
-      const processedChart = processChartData(transaksi)
-      setChartData(processedChart)
-    } else {
-      // Data Dummy Cantik (Fallback jika database transaksi masih kosong saat demo)
-      setChartData([
-        { name: 'Jan', masuk: 400, keluar: 240 },
-        { name: 'Feb', masuk: 300, keluar: 139 },
-        { name: 'Mar', masuk: 200, keluar: 980 },
-        { name: 'Apr', masuk: 278, keluar: 390 },
-        { name: 'Mei', masuk: 189, keluar: 480 },
-        { name: 'Jun', masuk: 239, keluar: 380 },
-        { name: 'Jul', masuk: 349, keluar: 430 },
-      ])
-    }
-
-    // C. Ambil Master Obat (Untuk Dropdown)
+    // C. Ambil Master Obat
     const { data: obat } = await supabase.from('obat').select('id, nama_obat').order('nama_obat')
     if (obat) setObatList(obat)
 
     setLoading(false)
-  }
-
-  // Helper: Mengolah data transaksi mentah menjadi format grafik
-  const processChartData = (data: any[]) => {
-    // Di sini kita bisa buat logika grouping by month. 
-    // Untuk simplifikasi demo, kita return dummy yang "terlihat" real jika data sedikit.
-    // Jika data banyak, gunakan reduce() berdasarkan bulan.
-    return [
-        { name: 'Mei', masuk: 65, keluar: 40 },
-        { name: 'Jun', masuk: 59, keluar: 80 },
-        { name: 'Jul', masuk: 80, keluar: 55 },
-        { name: 'Agu', masuk: 81, keluar: 100 },
-        { name: 'Sep', masuk: 56, keluar: 60 },
-        { name: 'Okt', masuk: 105, keluar: 120 }, // Data bulan ini (contoh)
-    ]; 
   }
 
   useEffect(() => {
@@ -113,9 +86,8 @@ export default function InventoryPage() {
     setSubmitting(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Sesi habis, silakan login ulang.")
+      if (!user) throw new Error("Sesi habis.")
 
-      // Panggil RPC (Stored Procedure) di Database
       const { error } = await supabase.rpc('tambah_stok_lengkap', {
         p_id_obat: parseInt(formData.id_obat),
         p_no_batch: formData.no_batch,
@@ -127,11 +99,10 @@ export default function InventoryPage() {
 
       if (error) throw error
 
-      // Reset & Refresh
       alert('✅ Stok Berhasil Ditambahkan!')
       setIsModalOpen(false)
       setFormData({ id_obat: '', no_batch: '', barcode_batch: '', tanggal_kedaluwarsa: '', jumlah_stok: '' })
-      fetchData() // Refresh tabel dan grafik
+      fetchData()
 
     } catch (err: any) {
       alert('❌ Gagal: ' + err.message)
@@ -142,23 +113,21 @@ export default function InventoryPage() {
 
   // --- 3. HANDLE SOFT DELETE ---
   const handleDelete = async (idStok: number) => {
-    if (!confirm('Apakah Anda yakin ingin mengarsipkan stok ini? Data tidak akan hilang permanen.')) return;
+    if (!confirm('Arsipkan stok ini? (Soft Delete)')) return;
 
-    // Update kolom 'dihapus_pada' dengan waktu sekarang (ISO String)
     const { error } = await supabase
       .from('stok_obat')
       .update({ dihapus_pada: new Date().toISOString() })
       .eq('id', idStok)
 
     if (error) {
-      alert('Gagal menghapus: ' + error.message)
+      alert('Gagal: ' + error.message)
     } else {
-      // Optimistic Update: Langsung hapus dari tampilan tabel tanpa reload page
       setStokList(prev => prev.filter(item => item.id !== idStok))
     }
   }
 
-  // --- 4. FILTER & STATS CALCULATION ---
+  // --- 4. FILTER & STATS ---
   const filteredData = stokList.filter((item) => {
     const term = search.toLowerCase()
     const namaObat = item.batch_obat?.obat?.nama_obat?.toLowerCase() || ''
@@ -166,20 +135,19 @@ export default function InventoryPage() {
     return namaObat.includes(term) || barcode.includes(term)
   })
 
-  // Hitung Statistik Realtime
   const totalItem = stokList.reduce((acc, curr) => acc + curr.jumlah_stok, 0)
   const lowStock = stokList.filter(item => item.jumlah_stok < 10).length
   const expiredCount = stokList.filter(item => new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date()).length
 
   return (
-    <div className="relative min-h-screen w-full bg-white font-sans text-secondary-900 selection:bg-primary-500 selection:text-white dark:bg-slate-950 dark:text-white transition-colors duration-500">
+    // FIX DISINI: Menambahkan class 'overflow-hidden' agar background blob tidak bikin scroll samping
+    <div className="relative min-h-screen w-full overflow-hidden bg-white font-sans text-secondary-900 selection:bg-primary-500 selection:text-white dark:bg-slate-950 dark:text-white transition-colors duration-500">
       
-      {/* Background Component */}
       <GridBackground />
 
       <div className="relative z-10 mx-auto max-w-7xl p-4 md:p-8 space-y-8">
         
-        {/* --- HEADER --- */}
+        {/* HEADER */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center rounded-3xl border border-white/40 bg-white/40 p-6 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-secondary-900 dark:text-white">
@@ -208,9 +176,8 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* --- STATS GRID --- */}
+        {/* STATS CARDS */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {/* Card 1: Total Aset */}
             <div className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-primary-600 to-emerald-600 p-6 text-white shadow-lg dark:border-white/5 dark:from-primary-900 dark:to-emerald-900">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
                 <div className="flex items-center gap-4 relative z-10">
@@ -225,7 +192,6 @@ export default function InventoryPage() {
                 </div>
             </div>
 
-            {/* Card 2: Stok Menipis */}
             <div className="rounded-2xl border border-white/40 bg-white/40 p-6 shadow-lg backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"><AlertTriangle size={28}/></div>
@@ -237,7 +203,6 @@ export default function InventoryPage() {
                 <div className="mt-4 text-xs text-secondary-400">Item dengan stok &lt; 10 unit</div>
             </div>
 
-            {/* Card 3: Kadaluarsa */}
             <div className="rounded-2xl border border-white/40 bg-white/40 p-6 shadow-lg backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"><Calendar size={28}/></div>
@@ -250,7 +215,7 @@ export default function InventoryPage() {
             </div>
         </div>
 
-        {/* --- GRAFIK LINE CHART RGB (INTERAKTIF) --- */}
+        {/* GRAFIK RGB */}
         <div className="rounded-3xl border border-secondary-200 bg-white/40 p-6 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
           <div className="flex items-center justify-between mb-6">
              <div>
@@ -265,7 +230,6 @@ export default function InventoryPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
-                {/* Definisi Gradient RGB Keren */}
                 <defs>
                   <linearGradient id="colorMasuk" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -290,7 +254,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* --- TOOLBAR & SEARCH --- */}
+        {/* SEARCH & ADD */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="relative w-full sm:w-96 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 group-focus-within:text-primary-500 transition-colors" />
@@ -312,7 +276,7 @@ export default function InventoryPage() {
               </button>
         </div>
 
-        {/* --- TABEL GLASS --- */}
+        {/* TABEL */}
         <div className="overflow-hidden rounded-3xl border border-secondary-200 bg-white/40 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-secondary-200 dark:divide-white/5">
@@ -331,7 +295,6 @@ export default function InventoryPage() {
                 ) : filteredData.length > 0 ? (
                   filteredData.map((item) => {
                     const isExpired = new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date();
-                    
                     return (
                     <tr key={item.id} className="group hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4">
@@ -379,7 +342,7 @@ export default function InventoryPage() {
                     <td colSpan={5} className="px-6 py-16 text-center text-secondary-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Search size={32} className="text-secondary-300 opacity-50"/>
-                        <p>Data tidak ditemukan. Coba kata kunci lain atau tambah stok.</p>
+                        <p>Data tidak ditemukan.</p>
                       </div>
                     </td>
                   </tr>
@@ -389,7 +352,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* --- MODAL INPUT (BLUR & GLASS) --- */}
+        {/* MODAL INPUT */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
             <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
@@ -403,7 +366,7 @@ export default function InventoryPage() {
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Scan Barcode Field */}
+                {/* Form Fields... (Sama seperti sebelumnya) */}
                 <div>
                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode / Kode</label>
                    <div className="relative">
