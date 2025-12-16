@@ -2,17 +2,28 @@
 
 import Link from 'next/link'
 import { ArrowRight, Activity, Box, ShieldCheck, Zap, Moon, Sun, MapPin, Heart } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isDark, setIsDark] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Logic 3D Tilt + Efek Spotlight 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
       setMousePosition({ x, y });
+      
+      // CSS Variables untuk Efek Spotlight
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const spotX = e.clientX - rect.left;
+        const spotY = e.clientY - rect.top;
+        containerRef.current.style.setProperty('--mouse-x', `${spotX}px`);
+        containerRef.current.style.setProperty('--mouse-y', `${spotY}px`);
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -34,6 +45,7 @@ export default function Home() {
       <div className="absolute inset-0 bg-grid-pattern bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,white,transparent)] dark:opacity-0 transition-opacity duration-500"></div>
       <div className="absolute inset-0 bg-grid-pattern-dark bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1),transparent)] opacity-0 dark:opacity-20 transition-opacity duration-500"></div>
       
+      {/* Animated Blobs */}
       <div className="absolute -top-[20%] -left-[10%] h-[500px] w-[500px] rounded-full bg-primary-400/20 blur-[100px] mix-blend-multiply animate-float dark:bg-primary-500/10 dark:mix-blend-screen"></div>
       <div className="absolute top-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-[100px] mix-blend-multiply animate-float dark:bg-blue-500/10 dark:mix-blend-screen" style={{animationDelay: '2s'}}></div>
 
@@ -68,7 +80,7 @@ export default function Home() {
         
         {/* TEXT CONTENT (KIRI) */}
         <div className="relative z-10 max-w-2xl text-center lg:text-left">
-          {/* Badge Lokasi - Personal Touch */}
+          {/* Badge Lokasi */}
           <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 mb-6 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300">
             <MapPin size={14} className="animate-bounce" />
             <span>Jl. Pagujaten No. 18, Jakarta Selatan</span>
@@ -81,7 +93,6 @@ export default function Home() {
             </span>
           </h1>
 
-          {/* Storytelling Text */}
           <p className="text-lg text-secondary-500 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0 dark:text-secondary-400">
             Berawal dari usaha rumahan yang melayani warga Pejaten Timur, kini 
             <span className="font-semibold text-secondary-900 dark:text-white"> Toko Dian Sehat </span> 
@@ -90,12 +101,19 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row justify-center lg:justify-start">
+            
+            {/* --- MAGIC BUTTON ALA LINEAR --- */}
             <Link 
               href="/login"
               className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary-500/30 transition-all hover:bg-primary-700 hover:scale-105 active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
             >
-              Akses Sistem Admin
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              {/* Shimmer Effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0" />
+              
+              <span className="relative z-10 flex items-center gap-2">
+                Akses Sistem Admin
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </span>
             </Link>
             
             <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:border-secondary-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
@@ -113,13 +131,22 @@ export default function Home() {
         {/* 3D VISUAL - KARTU (KANAN) */}
         <div className="relative mt-16 lg:mt-0 lg:h-[600px] lg:w-[600px] flex items-center justify-center perspective-1000">
           
-          {/* Main Card */}
+          {/* Main Card Container */}
           <div 
-            className="relative w-[350px] sm:w-[450px] rounded-3xl border border-white/40 bg-white/40 p-6 shadow-2xl backdrop-blur-md transition-transform duration-100 ease-out will-change-transform dark:border-white/5 dark:bg-slate-900/50 dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
+            ref={containerRef}
+            className="group/card relative w-[350px] sm:w-[450px] rounded-3xl border border-white/40 bg-white/40 p-6 shadow-2xl backdrop-blur-md transition-transform duration-100 ease-out will-change-transform dark:border-white/5 dark:bg-slate-900/50 dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
             style={{
               transform: `rotateY(${mousePosition.x * 15}deg) rotateX(${mousePosition.y * -15}deg) translateZ(20px)`,
             }}
           >
+            {/* SPOTLIGHT EFFECT (Hanya muncul di Dark Mode agar dramatis) */}
+            <div 
+              className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-300 group-hover/card:opacity-100 dark:block hidden"
+              style={{
+                background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%)`,
+              }}
+            />
+
             {/* Header Mockup */}
             <div className="mb-6 flex items-center justify-between">
               <div className="flex gap-2">
@@ -145,7 +172,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* List Mockup (Data Obat Nyata) */}
+              {/* List Mockup */}
               <div className="rounded-2xl bg-white p-4 shadow-sm border border-secondary-100 space-y-3 dark:bg-white/5 dark:border-white/5">
                  <div className="flex items-center justify-between mb-2">
                     <div className="text-xs font-bold text-secondary-400">RECENT ACTIVITY</div>
@@ -169,7 +196,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Floating Elements */}
+            {/* Floating Elements (Secure Badge) */}
             <div 
               className="absolute -right-12 top-20 rounded-2xl bg-white p-4 shadow-xl border border-secondary-100 animate-float dark:bg-slate-800 dark:border-white/10"
               style={{ transform: 'translateZ(50px)' }}
