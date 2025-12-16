@@ -1,4 +1,3 @@
-// src/components/layout/Navbar.tsx
 import { Sun, Moon } from 'lucide-react'
 
 interface NavbarProps {
