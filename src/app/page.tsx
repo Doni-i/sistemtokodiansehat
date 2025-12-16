@@ -1,14 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Activity, Box, ShieldCheck, Zap, Moon, Sun } from 'lucide-react'
+import { ArrowRight, Activity, Box, ShieldCheck, Zap, Moon, Sun, MapPin, Heart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isDark, setIsDark] = useState(false); // State untuk Dark Mode
+  const [isDark, setIsDark] = useState(false);
 
-  // 1. Logic 3D Tilt Mouse
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -19,7 +18,6 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // 2. Logic Toggle Dark Mode (Menambah class 'dark' ke body HTML)
   const toggleTheme = () => {
     setIsDark(!isDark);
     if (!isDark) {
@@ -30,21 +28,16 @@ export default function Home() {
   };
 
   return (
-    // Base Container: Putih di light mode, Slate-950 (gelap) di dark mode
     <main className="relative min-h-screen w-full overflow-hidden bg-white text-secondary-900 transition-colors duration-500 font-sans selection:bg-primary-500 selection:text-white dark:bg-slate-950 dark:text-white">
       
-      {/* --- BACKGROUND GRID --- */}
-      {/* Light Mode Grid */}
+      {/* BACKGROUND ELEMENTS */}
       <div className="absolute inset-0 bg-grid-pattern bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,white,transparent)] dark:opacity-0 transition-opacity duration-500"></div>
-      
-      {/* Dark Mode Grid (Hanya muncul saat dark mode) */}
       <div className="absolute inset-0 bg-grid-pattern-dark bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1),transparent)] opacity-0 dark:opacity-20 transition-opacity duration-500"></div>
       
-      {/* Gradient Blobs (Aura Warna) */}
       <div className="absolute -top-[20%] -left-[10%] h-[500px] w-[500px] rounded-full bg-primary-400/20 blur-[100px] mix-blend-multiply animate-float dark:bg-primary-500/10 dark:mix-blend-screen"></div>
       <div className="absolute top-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-[100px] mix-blend-multiply animate-float dark:bg-blue-500/10 dark:mix-blend-screen" style={{animationDelay: '2s'}}></div>
 
-      {/* --- NAVBAR --- */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 z-50 w-full border-b border-secondary-200 bg-white/70 backdrop-blur-xl transition-colors duration-500 dark:border-white/10 dark:bg-slate-900/70">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-2">
@@ -57,7 +50,6 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-             {/* TOGGLE BUTTON (MATAHARI / BULAN) */}
             <button 
               onClick={toggleTheme}
               className="rounded-full p-2 text-secondary-500 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-white/10 transition-all"
@@ -65,36 +57,36 @@ export default function Home() {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <div className="hidden text-sm font-medium text-secondary-500 md:block dark:text-secondary-400">
-              Enterprise System v2.0
+              Pejaten Branch v2.0
             </div>
           </div>
         </div>
       </nav>
 
-      {/* --- HERO SECTION --- */}
+      {/* HERO SECTION */}
       <div className="container relative mx-auto flex min-h-screen flex-col items-center justify-center px-6 pt-20 lg:flex-row lg:justify-between">
         
-        {/* TEXT CONTENT */}
+        {/* TEXT CONTENT (KIRI) */}
         <div className="relative z-10 max-w-2xl text-center lg:text-left">
+          {/* Badge Lokasi - Personal Touch */}
           <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 mb-6 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
-            </span>
-            Sistem Operasional Live
+            <MapPin size={14} className="animate-bounce" />
+            <span>Jl. Pagujaten No. 18, Jakarta Selatan</span>
           </div>
 
           <h1 className="text-5xl font-extrabold tracking-tight text-secondary-900 sm:text-6xl lg:text-7xl mb-6 leading-tight dark:text-white">
-            Manajemen Stok <br/>
+            Dedikasi Farmasi <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-400 dark:from-primary-400 dark:to-emerald-200">
-              Tanpa Kompromi.
+              Untuk Keluarga.
             </span>
           </h1>
 
+          {/* Storytelling Text */}
           <p className="text-lg text-secondary-500 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0 dark:text-secondary-400">
-            Platform inventori modern untuk Toko Dian Sehat. Menggabungkan kecepatan 
-            <span className="font-semibold text-secondary-900 dark:text-white"> Next.js 15</span>, keamanan 
-            <span className="font-semibold text-secondary-900 dark:text-white"> Supabase RPC</span>, dan antarmuka kelas dunia.
+            Berawal dari usaha rumahan yang melayani warga Pejaten Timur, kini 
+            <span className="font-semibold text-secondary-900 dark:text-white"> Toko Dian Sehat </span> 
+            bertransformasi digital. Mengelola ribuan SKU obat dengan presisi, 
+            memastikan ketersediaan stok untuk kesehatan masyarakat sekitar.
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row justify-center lg:justify-start">
@@ -102,26 +94,23 @@ export default function Home() {
               href="/login"
               className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary-500/30 transition-all hover:bg-primary-700 hover:scale-105 active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
             >
-              Akses Dashboard
+              Akses Sistem Admin
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
             
-            <button 
-              onClick={() => alert("Dokumentasi tersedia di GitHub Repository")}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:border-secondary-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-            >
-              Dokumentasi API
+            <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:border-secondary-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
+              <Heart size={18} className="text-red-500 fill-red-500" /> Tentang Kami
             </button>
           </div>
           
           <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500 dark:opacity-40 dark:hover:opacity-100">
-            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><Zap size={20}/> TurboPack</div>
-            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><ShieldCheck size={20}/> RLS Security</div>
-            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><Activity size={20}/> Realtime</div>
+            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><Zap size={20}/> Next.js 15</div>
+            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><ShieldCheck size={20}/> Secure Data</div>
+            <div className="flex items-center gap-2 font-bold text-secondary-400 dark:text-secondary-300"><Activity size={20}/> Realtime Stok</div>
           </div>
         </div>
 
-        {/* 3D VISUAL - KARTU DASHBOARD */}
+        {/* 3D VISUAL - KARTU (KANAN) */}
         <div className="relative mt-16 lg:mt-0 lg:h-[600px] lg:w-[600px] flex items-center justify-center perspective-1000">
           
           {/* Main Card */}
@@ -138,43 +127,49 @@ export default function Home() {
                 <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
                 <div className="h-3 w-3 rounded-full bg-green-400"></div>
               </div>
-              <div className="h-2 w-20 rounded-full bg-secondary-200 dark:bg-white/10"></div>
+              <div className="h-2 w-24 rounded-full bg-secondary-200 dark:bg-white/10 text-[10px] flex items-center px-2 text-secondary-500">diansehat.id</div>
             </div>
 
-            {/* Chart Mockup */}
+            {/* Content Mockup */}
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="h-32 w-1/2 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-300 p-4 text-white shadow-lg dark:from-primary-600 dark:to-primary-800">
                    <div className="h-8 w-8 rounded-full bg-white/20 mb-4 flex items-center justify-center"><Box size={16}/></div>
-                   <div className="text-2xl font-bold">1,240</div>
-                   <div className="text-xs opacity-80">Total Stok Obat</div>
+                   <div className="text-2xl font-bold">2,850</div>
+                   <div className="text-xs opacity-80">Total Item Terdaftar</div>
                 </div>
                 <div className="h-32 w-1/2 rounded-2xl bg-white p-4 shadow-sm border border-secondary-100 dark:bg-white/5 dark:border-white/5">
                    <div className="h-8 w-8 rounded-full bg-orange-100 text-orange-600 mb-4 flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400"><Activity size={16}/></div>
-                   <div className="text-2xl font-bold text-secondary-800 dark:text-white">24</div>
-                   <div className="text-xs text-secondary-400 dark:text-secondary-400">Transaksi Hari Ini</div>
+                   <div className="text-2xl font-bold text-secondary-800 dark:text-white">18</div>
+                   <div className="text-xs text-secondary-400 dark:text-secondary-400">Low Stock Alert</div>
                 </div>
               </div>
 
-              {/* List Mockup */}
+              {/* List Mockup (Data Obat Nyata) */}
               <div className="rounded-2xl bg-white p-4 shadow-sm border border-secondary-100 space-y-3 dark:bg-white/5 dark:border-white/5">
-                 <div className="flex items-center justify-between">
-                    <div className="h-2 w-24 rounded bg-secondary-200 dark:bg-white/10"></div>
-                    <div className="h-2 w-10 rounded bg-secondary-100 dark:bg-white/5"></div>
+                 <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-bold text-secondary-400">RECENT ACTIVITY</div>
                  </div>
-                 {[1, 2, 3].map((i) => (
-                   <div key={i} className="flex items-center gap-3">
-                     <div className="h-8 w-8 rounded-lg bg-secondary-50 dark:bg-white/5"></div>
-                     <div className="flex-1 space-y-1">
-                       <div className="h-2 w-full rounded bg-secondary-100 dark:bg-white/10"></div>
-                       <div className="h-2 w-2/3 rounded bg-secondary-50 dark:bg-white/5"></div>
-                     </div>
+                 {/* Item 1 */}
+                 <div className="flex items-center gap-3 border-b border-secondary-50 pb-2 dark:border-white/5">
+                   <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600 dark:bg-green-900/30"><Zap size={14}/></div>
+                   <div className="flex-1">
+                     <div className="text-sm font-bold text-secondary-800 dark:text-gray-200">Paracetamol 500mg</div>
+                     <div className="text-xs text-secondary-400">Stok Masuk: +50 Box</div>
                    </div>
-                 ))}
+                 </div>
+                 {/* Item 2 */}
+                 <div className="flex items-center gap-3">
+                   <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 dark:bg-blue-900/30"><Box size={14}/></div>
+                   <div className="flex-1">
+                     <div className="text-sm font-bold text-secondary-800 dark:text-gray-200">Amoxicillin</div>
+                     <div className="text-xs text-secondary-400">Batch #8821 Verified</div>
+                   </div>
+                 </div>
               </div>
             </div>
 
-            {/* Floating Elements (Secure Badge) */}
+            {/* Floating Elements */}
             <div 
               className="absolute -right-12 top-20 rounded-2xl bg-white p-4 shadow-xl border border-secondary-100 animate-float dark:bg-slate-800 dark:border-white/10"
               style={{ transform: 'translateZ(50px)' }}
@@ -184,8 +179,8 @@ export default function Home() {
                     <ShieldCheck size={20}/>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-secondary-800 dark:text-white">Data Secured</div>
-                    <div className="text-xs text-secondary-400 dark:text-secondary-400">Encrypted AES-256</div>
+                    <div className="text-sm font-bold text-secondary-800 dark:text-white">Izin Usaha Valid</div>
+                    <div className="text-xs text-secondary-400 dark:text-secondary-400">NIB: 2903240022881</div>
                   </div>
                </div>
             </div>

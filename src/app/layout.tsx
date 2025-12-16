@@ -1,9 +1,9 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google"; // Font Sultan
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-// Load font dengan konfigurasi lengkap
+// Load font 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
   weight: ['300', '400', '500', '600', '700', '800'],
