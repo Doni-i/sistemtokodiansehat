@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+// Kita import colors bawaan tailwind untuk kemudahan live coding
+import colors from "tailwindcss/colors";
 
 const config: Config = {
   content: [
@@ -9,41 +11,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Warna diambil dari identitas spanduk Toko Dian Sehat
-        ds: {
-          green: {
-             DEFAULT: '#006837', // Hijau tua dominan di logo DS
-             dark: '#004d29',
-             light: '#008f4d'
-          },
-          red: {
-            DEFAULT: '#E30613', // Merah aksen pada teks DIANSEHAT
-          },
-          gold: {
-            DEFAULT: '#FDB913', // Kuning/Emas pada teks PAGUJATEN
-          },
-          cream: '#FAFAFA' // Latar belakang bersih
-        }
+        // ------------------ Warna ------------------
+        // colors.emerald' 'colors.rose' 'colors.blue'
+        primary: colors.emerald, 
+        secondary: colors.slate,
+        // --------------------------------------------------
       },
-      // Animasi ringan untuk "denyut" data, aman untuk LibreWolf
-      keyframes: {
-        'pulse-subtle': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.7' },
-        },
-        'ping-slow': {
-          '75%, 100%': { transform: 'scale(2)', opacity: '0' },
-        },
-         marquee: {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-100%)' },
-        },
+      backgroundImage: {
+        'grid-pattern': "linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)",
       },
       animation: {
-        'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite',
-        'ping-slow': 'ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite',
-        marquee: 'marquee 25s linear infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'spin-slow': 'spin 12s linear infinite',
       },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        }
+      }
     },
   },
   plugins: [],

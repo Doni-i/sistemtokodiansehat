@@ -1,104 +1,170 @@
 'use client'
 
 import Link from 'next/link'
-// FIX 1: Menambahkan 'Database' ke dalam import
-import { ArrowRight, Activity, Lock, Server, Wifi, Database } from 'lucide-react'
+import { ArrowRight, Activity, Box, ShieldCheck, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export default function Home() {
-  return (
-    // Latar belakang menggunakan warna hijau tua brand
-    <main className="relative flex min-h-screen flex-col overflow-hidden bg-ds-green-dark text-white selection:bg-ds-red selection:text-white font-sans">
-      
-      {/* --- BACKGROUND ELEMENTS --- */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
-      
-      {/* Watermark Logo DS */}
-      <div className="absolute right-[-10%] top-[-10%] text-[40rem] font-black text-white/5 pointer-events-none select-none leading-none tracking-tighter">
-        DS
-      </div>
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-      {/* --- TOP NAVIGATION BAR --- */}
-      <header className="relative z-20 w-full border-b border-white/10 bg-ds-green-dark/50 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+  // Logic untuk efek 3D Tilt mengikuti mouse
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalisasi posisi mouse dari tengah layar (-1 sampai 1)
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setMousePosition({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return (
+    <main className="relative min-h-screen w-full overflow-hidden bg-white text-secondary-900 font-sans selection:bg-primary-500 selection:text-white">
+      
+      {/* --- BACKGROUND (Clean Grid ala Lab Medis) --- */}
+      <div className="absolute inset-0 bg-grid-pattern bg-[size:40px_40px] [mask-image:linear-gradient(to_bottom,white,transparent)]"></div>
+      
+      {/* Gradient Blob Halus (Aura Warna Brand) */}
+      <div className="absolute -top-[20%] -left-[10%] h-[500px] w-[500px] rounded-full bg-primary-400/20 blur-[100px] mix-blend-multiply animate-float"></div>
+      <div className="absolute top-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-[100px] mix-blend-multiply animate-float" style={{animationDelay: '2s'}}></div>
+
+      {/* --- NAVBAR --- */}
+      <nav className="fixed top-0 z-50 w-full border-b border-secondary-200 bg-white/70 backdrop-blur-xl">
+        <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-2">
-            <div className="flex h-3 w-3 relative">
-              <span className="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-ds-green-light opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-ds-green-light"></span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-600 to-primary-400 text-white font-bold shadow-lg shadow-primary-500/30">
+              DS
             </div>
-            <span className="text-sm font-mono text-ds-green-light/80 tracking-wider">SYSTEM OPERATIONAL // TOKO DIAN SEHAT PAGUJATEN</span>
+            <span className="text-lg font-bold tracking-tight text-secondary-900">
+              Toko<span className="text-primary-600">DianSehat</span>
+            </span>
           </div>
-          <div className="text-xs text-white/50 font-mono">
-            Latency: 24ms | Region: Jakarta-South
+          <div className="hidden text-sm font-medium text-secondary-500 md:block">
+            Enterprise Pharmacy System v2.0
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* --- MAIN CONTENT --- */}
-      <div className="container relative z-20 mx-auto flex flex-1 flex-col items-start justify-center px-4 pt-10 lg:flex-row lg:items-center lg:gap-20">
+      {/* --- HERO SECTION --- */}
+      <div className="container relative mx-auto flex min-h-screen flex-col items-center justify-center px-6 pt-20 lg:flex-row lg:justify-between">
         
-        {/* KOLOM KIRI */}
-        <div className="flex-1 lg:max-w-2xl">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl">
-            <span className="block text-white">Enterprise</span>
-            <span className="block text-ds-red">Inventory</span>
-            <span className="block text-ds-green-light">Control.</span>
+        {/* TEXT CONTENT (Left) */}
+        <div className="relative z-10 max-w-2xl text-center lg:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+            </span>
+            Sistem Operasional Live
+          </div>
+
+          <h1 className="text-5xl font-extrabold tracking-tight text-secondary-900 sm:text-6xl lg:text-7xl mb-6 leading-tight">
+            Manajemen Stok <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-400">
+              Tanpa Kompromi.
+            </span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg text-white/70 sm:text-xl leading-relaxed border-l-2 border-ds-gold pl-6">
-            Platform manajemen farmasi terpusat untuk Toko Dian Sehat. 
-            Dirancang untuk visibilitas *real-time*, integritas data absolut, dan kecepatan eksekusi tingkat tinggi.
+          <p className="text-lg text-secondary-500 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+            Platform inventori modern untuk Toko Dian Sehat. Menggabungkan kecepatan 
+            <span className="font-semibold text-secondary-900"> Next.js 15</span>, keamanan 
+            <span className="font-semibold text-secondary-900"> Supabase RPC</span>, dan antarmuka kelas dunia.
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-4 sm:flex-row justify-center lg:justify-start">
             <Link 
               href="/login"
-              className="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-md bg-ds-red px-8 py-4 text-base font-bold text-white transition-all duration-300 hover:bg-ds-red/90 hover:shadow-[0_0_30px_-5px_rgba(227,6,19,0.5)]"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-primary-500/30 transition-all hover:bg-primary-700 hover:scale-105 active:scale-95"
             >
-              <span className="relative z-10 flex items-center gap-2">
-                Akses Command Center <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </span>
+              Akses Dashboard
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
-             <div className="flex items-center gap-2 px-4 py-2 text-sm text-ds-gold/80 font-mono bg-white/5 rounded-md border border-white/10">
-                <Wifi size={16} className="animate-pulse-subtle"/> Live Connection Established
-            </div>
+            
+            <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:border-secondary-300">
+              Dokumentasi API
+            </button>
+          </div>
+          
+          <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            {/* Fake Logos for "Trusted By" effect */}
+            <div className="flex items-center gap-2 font-bold text-secondary-400"><Zap size={20}/> TurboPack</div>
+            <div className="flex items-center gap-2 font-bold text-secondary-400"><ShieldCheck size={20}/> RLS Security</div>
+            <div className="flex items-center gap-2 font-bold text-secondary-400"><Activity size={20}/> Realtime</div>
           </div>
         </div>
 
-        {/* KOLOM KANAN: Visualisasi Data */}
-        <div className="mt-16 flex-1 lg:mt-0 lg:flex lg:justify-end">
-            <div className="relative h-[400px] w-[400px] rounded-full border border-ds-green-light/20 bg-ds-green-dark/50 backdrop-blur-sm flex items-center justify-center">
-                {/* Radar Rings */}
-                <div className="absolute h-[80%] w-[80%] rounded-full border border-ds-green-light/10 animate-[spin_20s_linear_infinite]"></div>
-                <div className="absolute h-[60%] w-[60%] rounded-full border border-ds-green-light/10 animate-[spin_15s_linear_reverse_infinite]"></div>
-                
-                {/* Central Data Point */}
-                 <div className="relative z-10 flex flex-col items-center justify-center text-center p-10 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                    <Activity size={40} className="text-ds-green-light mb-4 animate-pulse-subtle"/>
-                    <div className="text-4xl font-black text-white">99.9%</div>
-                    <div className="text-sm text-white/60 uppercase tracking-widest mt-1 font-semibold">Uptime Sistem</div>
-                    
-                    {/* FIX 2: Mengganti tanda > dengan &gt; agar tidak error JSX */}
-                    <div className="mt-4 text-xs text-ds-gold font-mono text-left w-full space-y-1">
-                        <div>&gt; Syncing Batch #9981... OK</div>
-                        <div>&gt; Verifying RPC Auth... OK</div>
-                        <div>&gt; Next.js Engine... READY</div>
-                    </div>
-                 </div>
+        {/* 3D VISUAL (Right) - MOCKUP APP YANG MIRING */}
+        <div className="relative mt-16 lg:mt-0 lg:h-[600px] lg:w-[600px] flex items-center justify-center perspective-1000">
+          
+          {/* Main Card (Glass Effect) */}
+          <div 
+            className="relative w-[350px] sm:w-[450px] rounded-3xl border border-white/40 bg-white/40 p-6 shadow-2xl backdrop-blur-md transition-transform duration-100 ease-out will-change-transform"
+            style={{
+              transform: `rotateY(${mousePosition.x * 15}deg) rotateX(${mousePosition.y * -15}deg) translateZ(20px)`,
+              boxShadow: `${mousePosition.x * -20}px ${mousePosition.y * 20}px 50px rgba(0,0,0,0.1)`
+            }}
+          >
+            {/* Header Mockup */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex gap-2">
+                <div className="h-3 w-3 rounded-full bg-red-400"></div>
+                <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
+                <div className="h-3 w-3 rounded-full bg-green-400"></div>
+              </div>
+              <div className="h-2 w-20 rounded-full bg-secondary-200"></div>
             </div>
-        </div>
-      </div>
 
-      {/* --- FOOTER: DATA TICKER --- */}
-      <div className="relative z-20 w-full bg-black/40 border-t border-white/5 py-3 overflow-hidden flex items-center">
-        <div className="flex animate-marquee whitespace-nowrap font-mono text-xs text-ds-green-light/70">
-            <span className="mx-4"><Server size={12} className="inline mr-2"/> Aktivitas Terkini: Stok Masuk [Paracetamol] Batch-001 (+500 unit) via Admin_Salsa.</span>
-            <span className="mx-4">|</span>
-            <span className="mx-4"><Lock size={12} className="inline mr-2"/> Keamanan: RLS Policy Updated. 0 Percobaan Akses Ilegal Terdeteksi.</span>
-            <span className="mx-4">|</span>
-            {/* FIX 3: Menggunakan &lt; untuk tanda kurang dari */}
-            <span className="mx-4"><Database size={12} className="inline mr-2"/> Database: Supabase Transaction Pool Stabil. Latency &lt; 50ms.</span>
-             <span className="mx-4">|</span>
-             <span className="mx-4">TOKO DIAN SEHAT PAGUJATEN - Enterprise Resource Planning v2.1</span>
+            {/* Chart Mockup */}
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="h-32 w-1/2 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-300 p-4 text-white shadow-lg">
+                   <div className="h-8 w-8 rounded-full bg-white/20 mb-4 flex items-center justify-center"><Box size={16}/></div>
+                   <div className="text-2xl font-bold">1,240</div>
+                   <div className="text-xs opacity-80">Total Stok Obat</div>
+                </div>
+                <div className="h-32 w-1/2 rounded-2xl bg-white p-4 shadow-sm border border-secondary-100">
+                   <div className="h-8 w-8 rounded-full bg-orange-100 text-orange-600 mb-4 flex items-center justify-center"><Activity size={16}/></div>
+                   <div className="text-2xl font-bold text-secondary-800">24</div>
+                   <div className="text-xs text-secondary-400">Transaksi Hari Ini</div>
+                </div>
+              </div>
+
+              {/* List Mockup */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm border border-secondary-100 space-y-3">
+                 <div className="flex items-center justify-between">
+                    <div className="h-2 w-24 rounded bg-secondary-200"></div>
+                    <div className="h-2 w-10 rounded bg-secondary-100"></div>
+                 </div>
+                 {[1, 2, 3].map((i) => (
+                   <div key={i} className="flex items-center gap-3">
+                     <div className="h-8 w-8 rounded-lg bg-secondary-50"></div>
+                     <div className="flex-1 space-y-1">
+                       <div className="h-2 w-full rounded bg-secondary-100"></div>
+                       <div className="h-2 w-2/3 rounded bg-secondary-50"></div>
+                     </div>
+                   </div>
+                 ))}
+              </div>
+            </div>
+
+            {/* Floating Elements (Parallax) */}
+            <div 
+              className="absolute -right-12 top-20 rounded-2xl bg-white p-4 shadow-xl border border-secondary-100 animate-float"
+              style={{ transform: 'translateZ(50px)' }}
+            >
+               <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <ShieldCheck size={20}/>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-secondary-800">Data Secured</div>
+                    <div className="text-xs text-secondary-400">Encrypted AES-256</div>
+                  </div>
+               </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </main>
