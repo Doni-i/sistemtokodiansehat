@@ -14,10 +14,10 @@ import {
 } from 'recharts'
 
 export default function InventoryPage() {
-  // --- STATE MANAGEMENT ---
+  // --- STATE ---
   const [stokList, setStokList] = useState<any[]>([])
   const [obatList, setObatList] = useState<any[]>([])
-  const [chartData, setChartData] = useState<any[]>([])
+  const [chartData, setChartData] = useState<any[]>([]) // Data Grafik
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -36,13 +36,48 @@ export default function InventoryPage() {
   const router = useRouter()
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // --- 1. FETCH DATA ---
+  // --- 1. LOGIKA MENGOLAH DATA TRANSAKSI JADI GRAFIK ---
+  const processChartData = (transactions: any[]) => {
+    // Kita buat wadah untuk menampung total per bulan
+    // Format Key: "Oct", "Nov", "Dec"
+    const monthlyStats: Record<string, { masuk: number; keluar: number; order: number }> = {}
+
+    transactions.forEach(trx => {
+        const date = new Date(trx.tanggal_waktu)
+        // Ambil nama bulan (contoh: "Okt", "Nov")
+        const monthName = date.toLocaleDateString('id-ID', { month: 'short' })
+        // Ambil angka bulan untuk sorting (0-11)
+        const monthIndex = date.getMonth()
+
+        if (!monthlyStats[monthName]) {
+            monthlyStats[monthName] = { masuk: 0, keluar: 0, order: monthIndex }
+        }
+
+        if (trx.tipe_transaksi === 'Masuk') {
+            monthlyStats[monthName].masuk += trx.kuantitas
+        } else {
+            monthlyStats[monthName].keluar += trx.kuantitas
+        }
+    })
+
+    // Ubah Object jadi Array dan urutkan berdasarkan bulan
+    return Object.keys(monthlyStats)
+        .map(key => ({
+            name: key,
+            masuk: monthlyStats[key].masuk,
+            keluar: monthlyStats[key].keluar,
+            order: monthlyStats[key].order
+        }))
+        .sort((a, b) => a.order - b.order) // Urutkan Jan -> Des
+  }
+
+  // --- 2. FETCH DATA ---
   const fetchData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return router.push('/login')
 
-    // A. Ambil Data Stok (Hanya yang belum dihapus/soft delete)
+    // A. Ambil Stok
     const { data: stok } = await supabase
       .from('stok_obat')
       .select(`
@@ -57,21 +92,20 @@ export default function InventoryPage() {
     
     if (stok) setStokList(stok)
 
-    // B. Data Dummy untuk Grafik RGB (Agar Presentasi Cantik)
-    // Nanti bisa diganti dengan query real ke tabel transaksi_inventori
-    setChartData([
-      { name: 'Jan', masuk: 240, keluar: 150 },
-      { name: 'Feb', masuk: 139, keluar: 200 },
-      { name: 'Mar', masuk: 980, keluar: 350 },
-      { name: 'Apr', masuk: 390, keluar: 450 },
-      { name: 'Mei', masuk: 480, keluar: 380 },
-      { name: 'Jun', masuk: 380, keluar: 420 },
-      { name: 'Jul', masuk: 430, keluar: 310 },
-    ])
-
-    // C. Ambil Master Obat
+    // B. Ambil Master Obat
     const { data: obat } = await supabase.from('obat').select('id, nama_obat').order('nama_obat')
     if (obat) setObatList(obat)
+
+    // C. AMBIL TRANSAKSI REALTIME UNTUK GRAFIK
+    const { data: transaksi } = await supabase
+        .from('transaksi_inventori')
+        .select('tipe_transaksi, kuantitas, tanggal_waktu')
+        .order('tanggal_waktu', { ascending: true })
+
+    if (transaksi) {
+        const processed = processChartData(transaksi)
+        setChartData(processed)
+    }
 
     setLoading(false)
   }
@@ -80,7 +114,7 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // --- 2. HANDLE SUBMIT (RPC) ---
+  // --- 3. HANDLE SUBMIT ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -88,10 +122,21 @@ export default function InventoryPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Sesi habis.")
 
+      // Logic Generate Batch Code Pintar (Frontend Side)
+      // Format: [3 Huruf Obat]-[YYMM]-[ID Obat]
+      const selectedObat = obatList.find(o => o.id == formData.id_obat)
+      const codeName = selectedObat ? selectedObat.nama_obat.substring(0, 3).toUpperCase() : 'GEN'
+      const date = new Date(formData.tanggal_kedaluwarsa)
+      const expCode = `${date.getFullYear().toString().substr(-2)}${(date.getMonth()+1).toString().padStart(2, '0')}`
+      
+      // Override No Batch dengan Format Pintar (Jika user isi manual, kita timpa saja biar rapi, atau user bisa isi manual)
+      // Disini saya biarkan user isi, TAPI barcode kita auto generate kalau kosong
+      const smartBarcode = formData.barcode_batch || `899${Math.floor(Math.random() * 10000000)}`
+
       const { error } = await supabase.rpc('tambah_stok_lengkap', {
         p_id_obat: parseInt(formData.id_obat),
-        p_no_batch: formData.no_batch,
-        p_barcode_batch: formData.barcode_batch,
+        p_no_batch: formData.no_batch, // User input batch manual (misal dari pabrik)
+        p_barcode_batch: smartBarcode,
         p_expired: formData.tanggal_kedaluwarsa,
         p_qty: parseInt(formData.jumlah_stok),
         p_id_user: user.id
@@ -111,28 +156,18 @@ export default function InventoryPage() {
     }
   }
 
-  // --- 3. HANDLE SOFT DELETE ---
   const handleDelete = async (idStok: number) => {
-    if (!confirm('Arsipkan stok ini? (Soft Delete)')) return;
-
-    const { error } = await supabase
-      .from('stok_obat')
-      .update({ dihapus_pada: new Date().toISOString() })
-      .eq('id', idStok)
-
-    if (error) {
-      alert('Gagal: ' + error.message)
-    } else {
-      setStokList(prev => prev.filter(item => item.id !== idStok))
-    }
+    if (!confirm('Arsipkan stok ini?')) return;
+    const { error } = await supabase.from('stok_obat').update({ dihapus_pada: new Date().toISOString() }).eq('id', idStok)
+    if (!error) setStokList(prev => prev.filter(item => item.id !== idStok))
   }
 
-  // --- 4. FILTER & STATS ---
   const filteredData = stokList.filter((item) => {
     const term = search.toLowerCase()
     const namaObat = item.batch_obat?.obat?.nama_obat?.toLowerCase() || ''
     const barcode = item.batch_obat?.barcode_batch || ''
-    return namaObat.includes(term) || barcode.includes(term)
+    const batch = item.batch_obat?.no_batch?.toLowerCase() || ''
+    return namaObat.includes(term) || barcode.includes(term) || batch.includes(term)
   })
 
   const totalItem = stokList.reduce((acc, curr) => acc + curr.jumlah_stok, 0)
@@ -140,7 +175,6 @@ export default function InventoryPage() {
   const expiredCount = stokList.filter(item => new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date()).length
 
   return (
-    // FIX DISINI: Menambahkan class 'overflow-hidden' agar background blob tidak bikin scroll samping
     <div className="relative min-h-screen w-full overflow-hidden bg-white font-sans text-secondary-900 selection:bg-primary-500 selection:text-white dark:bg-slate-950 dark:text-white transition-colors duration-500">
       
       <GridBackground />
@@ -176,7 +210,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* STATS CARDS */}
+        {/* STATS */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-primary-600 to-emerald-600 p-6 text-white shadow-lg dark:border-white/5 dark:from-primary-900 dark:to-emerald-900">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
@@ -215,14 +249,14 @@ export default function InventoryPage() {
             </div>
         </div>
 
-        {/* GRAFIK RGB */}
+        {/* GRAFIK REALTIME */}
         <div className="rounded-3xl border border-secondary-200 bg-white/40 p-6 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
           <div className="flex items-center justify-between mb-6">
              <div>
                 <h3 className="text-lg font-bold text-secondary-900 dark:text-white flex items-center gap-2">
                   <Activity size={20} className="text-primary-500"/> Tren Pergerakan Stok
                 </h3>
-                <p className="text-xs text-secondary-500 dark:text-secondary-400">Analisis barang masuk vs keluar per bulan</p>
+                <p className="text-xs text-secondary-500 dark:text-secondary-400">Analisis barang masuk vs keluar per bulan (Realtime Data)</p>
              </div>
              <button className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-white/5 transition-colors"><Filter size={16} className="text-secondary-400"/></button>
           </div>
@@ -254,7 +288,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* SEARCH & ADD */}
+        {/* TOOLBAR & SEARCH */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="relative w-full sm:w-96 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 group-focus-within:text-primary-500 transition-colors" />
@@ -276,7 +310,7 @@ export default function InventoryPage() {
               </button>
         </div>
 
-        {/* TABEL */}
+        {/* TABEL GLASS */}
         <div className="overflow-hidden rounded-3xl border border-secondary-200 bg-white/40 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-secondary-200 dark:divide-white/5">
@@ -301,6 +335,10 @@ export default function InventoryPage() {
                         <div className="font-bold text-secondary-900 text-base dark:text-white">{item.batch_obat?.obat?.nama_obat}</div>
                         <div className="flex gap-2 mt-1">
                            <span className="text-[10px] font-bold text-secondary-500 bg-secondary-100 dark:bg-white/10 dark:text-secondary-300 px-2 py-0.5 rounded">{item.batch_obat?.obat?.satuan}</span>
+                           {/* Harga ditampilkan sebagai info tambahan (Master Data) */}
+                           <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded">
+                             Rp {item.batch_obat?.obat?.harga_jual?.toLocaleString('id-ID')}
+                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -318,7 +356,7 @@ export default function InventoryPage() {
                             : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
                         }`}>
                           {isExpired ? <AlertTriangle size={12}/> : <Calendar size={12}/>}
-                          {item.batch_obat?.tanggal_kedaluwarsa}
+                          {new Date(item.batch_obat?.tanggal_kedaluwarsa).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -352,7 +390,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* MODAL INPUT */}
+        {/* MODAL INPUT (SAMA SEPERTI SEBELUMNYA) */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
             <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
@@ -366,17 +404,15 @@ export default function InventoryPage() {
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Form Fields... (Sama seperti sebelumnya) */}
+                {/* Form Elements tetap sama */}
                 <div>
                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode / Kode</label>
                    <div className="relative">
                       <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" size={18} />
                       <input
                           type="text"
-                          required
-                          autoFocus
                           className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 pl-10 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
-                          placeholder="Tembak barcode di sini..."
+                          placeholder="Kosongkan untuk auto-generate..."
                           value={formData.barcode_batch}
                           onChange={e => setFormData({...formData, barcode_batch: e.target.value})}
                         />
