@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
-// Kita import colors bawaan tailwind untuk kemudahan live coding
 import colors from "tailwindcss/colors";
 
 const config: Config = {
+  darkMode: 'class', 
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,18 +11,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ------------------ Warna ------------------
-        // colors.emerald' 'colors.rose' 'colors.blue'
-        primary: colors.emerald, 
+        primary: colors.emerald, // B(rose, blue, violet)
         secondary: colors.slate,
-        // --------------------------------------------------
       },
       backgroundImage: {
         'grid-pattern': "linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)",
+        'grid-pattern-dark': "linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)",
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',
-        'spin-slow': 'spin 12s linear infinite',
       },
       keyframes: {
         float: {
