@@ -6,18 +6,53 @@ import { useRouter } from 'next/navigation'
 import { 
   ScanBarcode, LogOut, Plus, X, Save, Trash2, 
   AlertTriangle, Package, Search, Calendar, Activity, 
-  ArrowUpRight, ArrowDownRight, Filter 
+  ArrowUpRight, Filter, ChevronDown 
 } from 'lucide-react'
 import GridBackground from '@/components/background/GridBackground'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts'
 
+// --- KOMPONEN RAHASIA: SPOTLIGHT CARD (Magic Effect) ---
+function SpotlightCard({ children, className = "", noHover = false }: { children: React.ReactNode; className?: string; noHover?: boolean }) {
+  const divRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!divRef.current) return;
+    const div = divRef.current;
+    const rect = div.getBoundingClientRect();
+    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  return (
+    <div
+      ref={divRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setOpacity(1)}
+      onMouseLeave={() => setOpacity(0)}
+      className={`relative overflow-hidden rounded-3xl border border-secondary-200/60 bg-white/40 shadow-xl backdrop-blur-md transition-all duration-300 dark:border-white/10 dark:bg-slate-900/40 ${className}`}
+    >
+      {/* Spotlight Gradient - Mengikuti Mouse */}
+      <div
+        className="pointer-events-none absolute -inset-px transition duration-300"
+        style={{
+          opacity,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(16, 185, 129, 0.15), transparent 40%)`,
+        }}
+      />
+      {/* Konten */}
+      <div className="relative z-10 h-full">{children}</div>
+    </div>
+  );
+}
+
 export default function InventoryPage() {
   // --- STATE ---
   const [stokList, setStokList] = useState<any[]>([])
   const [obatList, setObatList] = useState<any[]>([])
-  const [chartData, setChartData] = useState<any[]>([]) // Data Grafik
+  const [chartData, setChartData] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -36,31 +71,22 @@ export default function InventoryPage() {
   const router = useRouter()
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // --- 1. LOGIKA MENGOLAH DATA TRANSAKSI JADI GRAFIK ---
+  // --- 1. DATA PROCESSING FOR CHART ---
   const processChartData = (transactions: any[]) => {
-    // Kita buat wadah untuk menampung total per bulan
-    // Format Key: "Oct", "Nov", "Dec"
     const monthlyStats: Record<string, { masuk: number; keluar: number; order: number }> = {}
-
     transactions.forEach(trx => {
         const date = new Date(trx.tanggal_waktu)
-        // Ambil nama bulan (contoh: "Okt", "Nov")
         const monthName = date.toLocaleDateString('id-ID', { month: 'short' })
-        // Ambil angka bulan untuk sorting (0-11)
         const monthIndex = date.getMonth()
-
         if (!monthlyStats[monthName]) {
             monthlyStats[monthName] = { masuk: 0, keluar: 0, order: monthIndex }
         }
-
         if (trx.tipe_transaksi === 'Masuk') {
             monthlyStats[monthName].masuk += trx.kuantitas
         } else {
             monthlyStats[monthName].keluar += trx.kuantitas
         }
     })
-
-    // Ubah Object jadi Array dan urutkan berdasarkan bulan
     return Object.keys(monthlyStats)
         .map(key => ({
             name: key,
@@ -68,7 +94,7 @@ export default function InventoryPage() {
             keluar: monthlyStats[key].keluar,
             order: monthlyStats[key].order
         }))
-        .sort((a, b) => a.order - b.order) // Urutkan Jan -> Des
+        .sort((a, b) => a.order - b.order)
   }
 
   // --- 2. FETCH DATA ---
@@ -77,7 +103,7 @@ export default function InventoryPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return router.push('/login')
 
-    // A. Ambil Stok
+    // Fetch Stok
     const { data: stok } = await supabase
       .from('stok_obat')
       .select(`
@@ -92,21 +118,19 @@ export default function InventoryPage() {
     
     if (stok) setStokList(stok)
 
-    // B. Ambil Master Obat
+    // Fetch Master Obat
     const { data: obat } = await supabase.from('obat').select('id, nama_obat').order('nama_obat')
     if (obat) setObatList(obat)
 
-    // C. AMBIL TRANSAKSI REALTIME UNTUK GRAFIK
+    // Fetch Transaksi (Realtime Chart)
     const { data: transaksi } = await supabase
         .from('transaksi_inventori')
         .select('tipe_transaksi, kuantitas, tanggal_waktu')
         .order('tanggal_waktu', { ascending: true })
 
     if (transaksi) {
-        const processed = processChartData(transaksi)
-        setChartData(processed)
+        setChartData(processChartData(transaksi))
     }
-
     setLoading(false)
   }
 
@@ -114,7 +138,7 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // --- 3. HANDLE SUBMIT ---
+  // --- 3. ACTIONS ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -122,20 +146,11 @@ export default function InventoryPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Sesi habis.")
 
-      // Logic Generate Batch Code Pintar (Frontend Side)
-      // Format: [3 Huruf Obat]-[YYMM]-[ID Obat]
-      const selectedObat = obatList.find(o => o.id == formData.id_obat)
-      const codeName = selectedObat ? selectedObat.nama_obat.substring(0, 3).toUpperCase() : 'GEN'
-      const date = new Date(formData.tanggal_kedaluwarsa)
-      const expCode = `${date.getFullYear().toString().substr(-2)}${(date.getMonth()+1).toString().padStart(2, '0')}`
-      
-      // Override No Batch dengan Format Pintar (Jika user isi manual, kita timpa saja biar rapi, atau user bisa isi manual)
-      // Disini saya biarkan user isi, TAPI barcode kita auto generate kalau kosong
       const smartBarcode = formData.barcode_batch || `899${Math.floor(Math.random() * 10000000)}`
 
       const { error } = await supabase.rpc('tambah_stok_lengkap', {
         p_id_obat: parseInt(formData.id_obat),
-        p_no_batch: formData.no_batch, // User input batch manual (misal dari pabrik)
+        p_no_batch: formData.no_batch,
         p_barcode_batch: smartBarcode,
         p_expired: formData.tanggal_kedaluwarsa,
         p_qty: parseInt(formData.jumlah_stok),
@@ -143,12 +158,10 @@ export default function InventoryPage() {
       })
 
       if (error) throw error
-
       alert('✅ Stok Berhasil Ditambahkan!')
       setIsModalOpen(false)
       setFormData({ id_obat: '', no_batch: '', barcode_batch: '', tanggal_kedaluwarsa: '', jumlah_stok: '' })
       fetchData()
-
     } catch (err: any) {
       alert('❌ Gagal: ' + err.message)
     } finally {
@@ -162,12 +175,14 @@ export default function InventoryPage() {
     if (!error) setStokList(prev => prev.filter(item => item.id !== idStok))
   }
 
+  // --- 4. CALCULATIONS ---
   const filteredData = stokList.filter((item) => {
     const term = search.toLowerCase()
-    const namaObat = item.batch_obat?.obat?.nama_obat?.toLowerCase() || ''
-    const barcode = item.batch_obat?.barcode_batch || ''
-    const batch = item.batch_obat?.no_batch?.toLowerCase() || ''
-    return namaObat.includes(term) || barcode.includes(term) || batch.includes(term)
+    return (
+        item.batch_obat?.obat?.nama_obat?.toLowerCase().includes(term) ||
+        item.batch_obat?.barcode_batch?.includes(term) ||
+        item.batch_obat?.no_batch?.toLowerCase().includes(term)
+    )
   })
 
   const totalItem = stokList.reduce((acc, curr) => acc + curr.jumlah_stok, 0)
@@ -181,11 +196,11 @@ export default function InventoryPage() {
 
       <div className="relative z-10 mx-auto max-w-7xl p-4 md:p-8 space-y-8">
         
-        {/* HEADER */}
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center rounded-3xl border border-white/40 bg-white/40 p-6 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
+        {/* --- HEADER (GLASS) --- */}
+        <SpotlightCard className="flex flex-col justify-between gap-4 md:flex-row md:items-center p-6">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-secondary-900 dark:text-white">
-              Dashboard <span className="text-primary-600 dark:text-primary-400">Inventori</span>
+              Dashboard <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-400">Inventori</span>
             </h1>
             <div className="flex items-center gap-2 text-sm text-secondary-500 dark:text-secondary-400 mt-1">
               <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -208,12 +223,13 @@ export default function InventoryPage() {
               <span className="font-medium">Keluar</span>
             </button>
           </div>
-        </div>
+        </SpotlightCard>
 
-        {/* STATS */}
+        {/* --- STATS CARDS (SPOTLIGHT EFFECT!) --- */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="relative overflow-hidden rounded-2xl border border-white/40 bg-gradient-to-br from-primary-600 to-emerald-600 p-6 text-white shadow-lg dark:border-white/5 dark:from-primary-900 dark:to-emerald-900">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl"></div>
+            {/* Card 1: Total Aset */}
+            <SpotlightCard className="p-6 bg-gradient-to-br from-primary-600/90 to-emerald-600/90 text-white dark:from-primary-900/80 dark:to-emerald-900/80 border-none">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/20 blur-2xl"></div>
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="p-3 rounded-xl bg-white/20 backdrop-blur-md shadow-inner"><Package size={28}/></div>
                     <div>
@@ -224,9 +240,10 @@ export default function InventoryPage() {
                 <div className="mt-4 flex items-center gap-1 text-xs text-primary-100/80 font-mono">
                    <ArrowUpRight size={12}/> +12% dari bulan lalu
                 </div>
-            </div>
+            </SpotlightCard>
 
-            <div className="rounded-2xl border border-white/40 bg-white/40 p-6 shadow-lg backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
+            {/* Card 2: Restock */}
+            <SpotlightCard className="p-6">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"><AlertTriangle size={28}/></div>
                     <div>
@@ -235,9 +252,10 @@ export default function InventoryPage() {
                     </div>
                 </div>
                 <div className="mt-4 text-xs text-secondary-400">Item dengan stok &lt; 10 unit</div>
-            </div>
+            </SpotlightCard>
 
-            <div className="rounded-2xl border border-white/40 bg-white/40 p-6 shadow-lg backdrop-blur-md dark:border-white/5 dark:bg-slate-900/50">
+            {/* Card 3: Expired */}
+            <SpotlightCard className="p-6">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"><Calendar size={28}/></div>
                     <div>
@@ -246,19 +264,26 @@ export default function InventoryPage() {
                     </div>
                 </div>
                 <div className="mt-4 text-xs text-secondary-400">Segera pisahkan dari rak</div>
-            </div>
+            </SpotlightCard>
         </div>
 
-        {/* GRAFIK REALTIME */}
-        <div className="rounded-3xl border border-secondary-200 bg-white/40 p-6 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
+        {/* --- GRAFIK RGB (SPOTLIGHT WRAPPER) --- */}
+        <SpotlightCard className="p-6">
           <div className="flex items-center justify-between mb-6">
              <div>
                 <h3 className="text-lg font-bold text-secondary-900 dark:text-white flex items-center gap-2">
                   <Activity size={20} className="text-primary-500"/> Tren Pergerakan Stok
                 </h3>
-                <p className="text-xs text-secondary-500 dark:text-secondary-400">Analisis barang masuk vs keluar per bulan (Realtime Data)</p>
+                <p className="text-xs text-secondary-500 dark:text-secondary-400">Analisis barang masuk vs keluar per bulan</p>
              </div>
-             <button className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-white/5 transition-colors"><Filter size={16} className="text-secondary-400"/></button>
+             <div className="flex gap-2">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold dark:bg-emerald-900/20 dark:text-emerald-400">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Masuk
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-bold dark:bg-red-900/20 dark:text-red-400">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div> Keluar
+                </div>
+             </div>
           </div>
           
           <div className="h-[300px] w-full">
@@ -281,14 +306,14 @@ export default function InventoryPage() {
                   contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.8)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', backdropFilter: 'blur(10px)' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Area type="monotone" dataKey="masuk" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorMasuk)" name="Barang Masuk" />
-                <Area type="monotone" dataKey="keluar" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorKeluar)" name="Barang Keluar" />
+                <Area type="monotone" dataKey="masuk" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorMasuk)" />
+                <Area type="monotone" dataKey="keluar" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorKeluar)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </SpotlightCard>
 
-        {/* TOOLBAR & SEARCH */}
+        {/* --- TOOLBAR --- */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="relative w-full sm:w-96 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 group-focus-within:text-primary-500 transition-colors" />
@@ -296,25 +321,29 @@ export default function InventoryPage() {
                   ref={searchInputRef}
                   type="text"
                   className="block w-full rounded-2xl border border-secondary-200 bg-white/50 p-3 pl-12 text-secondary-900 shadow-sm outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-primary-500"
-                  placeholder="Cari nama obat, barcode, atau batch..."
+                  placeholder="Cari obat..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
              </div>
              
+             {/* SHIMMERING BUTTON (KILAUAN) */}
              <button 
                 onClick={() => setIsModalOpen(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-white font-bold shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
+                className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary-600 px-6 py-3 text-white font-bold shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
               >
-                <Plus size={20} /> Input Stok Baru
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0" />
+                <span className="relative z-10 flex items-center gap-2">
+                    <Plus size={20} /> Input Stok Baru
+                </span>
               </button>
         </div>
 
-        {/* TABEL GLASS */}
-        <div className="overflow-hidden rounded-3xl border border-secondary-200 bg-white/40 shadow-xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/40">
+        {/* --- TABEL (SPOTLIGHT WRAPPER JUGA) --- */}
+        <SpotlightCard className="overflow-hidden p-0 border border-secondary-200 dark:border-white/10">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-secondary-200 dark:divide-white/5">
-              <thead className="bg-secondary-50/50 dark:bg-white/5">
+              <thead className="bg-secondary-50/80 dark:bg-white/5 backdrop-blur-sm">
                 <tr>
                   <th className="px-6 py-5 text-left text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Detail Obat</th>
                   <th className="px-6 py-5 text-left text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Batch & Exp</th>
@@ -330,23 +359,22 @@ export default function InventoryPage() {
                   filteredData.map((item) => {
                     const isExpired = new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date();
                     return (
-                    <tr key={item.id} className="group hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
+                    <tr key={item.id} className="group hover:bg-primary-50/50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-secondary-900 text-base dark:text-white">{item.batch_obat?.obat?.nama_obat}</div>
                         <div className="flex gap-2 mt-1">
                            <span className="text-[10px] font-bold text-secondary-500 bg-secondary-100 dark:bg-white/10 dark:text-secondary-300 px-2 py-0.5 rounded">{item.batch_obat?.obat?.satuan}</span>
-                           {/* Harga ditampilkan sebagai info tambahan (Master Data) */}
                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded">
                              Rp {item.batch_obat?.obat?.harga_jual?.toLocaleString('id-ID')}
                            </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-xs text-secondary-500 dark:text-secondary-400 mb-1">
-                           Batch: <span className="font-mono text-secondary-900 dark:text-white font-medium">{item.batch_obat?.no_batch}</span>
+                        <div className="text-xs text-secondary-500 dark:text-secondary-400 mb-1 flex items-center gap-2">
+                           <span className="font-mono bg-secondary-100 dark:bg-white/10 px-1.5 rounded text-secondary-700 dark:text-secondary-300">{item.batch_obat?.no_batch}</span>
                         </div>
-                        <div className="text-xs text-secondary-500 dark:text-secondary-400">
-                           Code: <span className="font-mono">{item.batch_obat?.barcode_batch || '-'}</span>
+                        <div className="text-xs text-secondary-400 font-mono opacity-70">
+                           {item.batch_obat?.barcode_batch || '-'}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -368,7 +396,7 @@ export default function InventoryPage() {
                         <button 
                           onClick={() => handleDelete(item.id)}
                           className="group/btn relative inline-flex items-center justify-center p-2 rounded-xl text-secondary-400 hover:text-red-600 hover:bg-red-50 transition-all dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                          title="Arsipkan (Soft Delete)"
+                          title="Arsipkan"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -388,9 +416,9 @@ export default function InventoryPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </SpotlightCard>
 
-        {/* MODAL INPUT (SAMA SEPERTI SEBELUMNYA) */}
+        {/* MODAL INPUT (Tetap Sama) */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
             <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
@@ -402,11 +430,10 @@ export default function InventoryPage() {
                   <X size={20} />
                 </button>
               </div>
-              
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Form Elements tetap sama */}
+                {/* ... (Isi Form Sama) ... */}
                 <div>
-                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode / Kode</label>
+                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode</label>
                    <div className="relative">
                       <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" size={18} />
                       <input
@@ -418,33 +445,24 @@ export default function InventoryPage() {
                         />
                    </div>
                 </div>
-
                 <div>
                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Pilih Obat</label>
                    <div className="relative">
-                     <select 
-                      required
-                      className="block w-full appearance-none rounded-xl border border-secondary-200 bg-secondary-50 p-3 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
-                      value={formData.id_obat}
-                      onChange={e => setFormData({...formData, id_obat: e.target.value})}
-                    >
+                     <select required className="block w-full appearance-none rounded-xl border border-secondary-200 bg-secondary-50 p-3 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
+                      value={formData.id_obat} onChange={e => setFormData({...formData, id_obat: e.target.value})}>
                       <option value="">-- Cari Nama Obat --</option>
                       {obatList.map(obat => (
                         <option key={obat.id} value={obat.id} className="dark:bg-slate-900">{obat.nama_obat}</option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary-500">
-                      <ArrowDownRight size={16}/>
-                    </div>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary-500"><ChevronDown size={16}/></div>
                    </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">No. Batch</label>
                     <input type="text" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
-                      placeholder="e.g. B-001"
-                      value={formData.no_batch} onChange={e => setFormData({...formData, no_batch: e.target.value})} />
+                      placeholder="e.g. B-001" value={formData.no_batch} onChange={e => setFormData({...formData, no_batch: e.target.value})} />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Tgl. Kedaluwarsa</label>
@@ -452,16 +470,14 @@ export default function InventoryPage() {
                       value={formData.tanggal_kedaluwarsa} onChange={e => setFormData({...formData, tanggal_kedaluwarsa: e.target.value})} />
                   </div>
                 </div>
-
                 <div>
-                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Jumlah Stok Masuk</label>
+                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Jumlah Stok</label>
                    <div className="relative">
                       <input type="number" required min="1" className="block w-full rounded-xl border-primary-200 bg-primary-50/50 p-4 text-2xl font-bold text-primary-700 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-primary-900/50 dark:bg-primary-900/10 dark:text-primary-400 dark:focus:bg-slate-800" 
                         value={formData.jumlah_stok} onChange={e => setFormData({...formData, jumlah_stok: e.target.value})} />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary-400">UNIT</div>
                    </div>
                 </div>
-
                 <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-secondary-100 dark:border-white/10">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-secondary-200 px-6 py-3 font-medium text-secondary-600 hover:bg-secondary-50 transition-colors dark:border-white/10 dark:text-secondary-300 dark:hover:bg-white/5">Batalkan</button>
                   <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 font-bold text-white shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 disabled:opacity-70 dark:bg-primary-500">

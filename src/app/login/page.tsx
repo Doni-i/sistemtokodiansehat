@@ -2,11 +2,45 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Lock, Mail, Loader2, ArrowRight } from 'lucide-react'
-// Import background agar konsisten
 import GridBackground from '@/components/background/GridBackground'
+
+// --- KOMPONEN RAHASIA: SPOTLIGHT CARD ---
+function SpotlightCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const divRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!divRef.current) return;
+    const div = divRef.current;
+    const rect = div.getBoundingClientRect();
+    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  return (
+    <div
+      ref={divRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setOpacity(1)}
+      onMouseLeave={() => setOpacity(0)}
+      className={`relative overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-2xl backdrop-blur-md transition-all duration-300 dark:border-white/5 dark:bg-slate-900/60 dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] ${className}`}
+    >
+      {/* Spotlight Gradient */}
+      <div
+        className="pointer-events-none absolute -inset-px transition duration-300"
+        style={{
+          opacity,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(16, 185, 129, 0.15), transparent 40%)`,
+        }}
+      />
+      {/* Konten */}
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -39,20 +73,20 @@ export default function LoginPage() {
       {/* 1. Background Konsisten */}
       <GridBackground />
 
-      {/* 2. Login Card */}
-      <div className="relative z-10 w-full max-w-md p-6 animate-float">
+      {/* 2. Login Card (Dengan Spotlight) */}
+      <div className="relative z-10 w-full max-w-md p-6 animate-in fade-in zoom-in duration-500">
         
         <Link href="/" className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-secondary-500 transition-colors hover:text-primary-600 dark:text-secondary-400 dark:hover:text-primary-400">
           <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Kembali ke Beranda
         </Link>
 
-        <div className="overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-2xl backdrop-blur-md dark:border-white/5 dark:bg-slate-900/60 dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]">
+        <SpotlightCard className="overflow-hidden">
           
           {/* Header Card dengan Gradient Brand */}
           <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-primary-600 to-emerald-500 p-6 dark:from-primary-900 dark:to-emerald-800">
              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
              <div className="relative z-10 flex h-full flex-col justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-sm shadow-inner">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-sm shadow-inner ring-1 ring-white/30">
                    <Lock size={20} />
                 </div>
                 <div>
@@ -76,7 +110,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full rounded-xl border border-secondary-200 bg-white/50 p-3 pl-10 text-sm text-secondary-900 placeholder-secondary-400 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-900"
-                    placeholder="masukkan email yang terdaftar di sini"
+                    placeholder="nama@diansehat.id"
                     required
                   />
                 </div>
@@ -99,12 +133,12 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {/* Shimmering Button */}
               <button
                 type="submit"
                 disabled={loading}
                 className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-primary-500 dark:hover:bg-primary-600"
               >
-                {/* Shimmer Effect */}
                 <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0" />
                 
                 {loading ? (
@@ -112,9 +146,9 @@ export default function LoginPage() {
                     <Loader2 size={18} className="animate-spin" /> Memproses...
                   </>
                 ) : (
-                  <>
+                  <span className="relative z-10 flex items-center gap-2">
                     Masuk ke Dashboard <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-                  </>
+                  </span>
                 )}
               </button>
             </form>
@@ -123,7 +157,7 @@ export default function LoginPage() {
               &copy; 2025 Toko Dian Sehat Management System
             </div>
           </div>
-        </div>
+        </SpotlightCard>
       </div>
     </div>
   )
