@@ -9,22 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       keyframes: {
-        shimmer: {
-          '100%': { transform: 'translateX(100%)' },
+        'spin-slow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
-        'fade-in-up': {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+        'spin-reverse-slow': {
+          '0%': { transform: 'rotate(360deg)' },
+          '100%': { transform: 'rotate(0deg)' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
+          '50%': { opacity: '0.4', transform: 'scale(0.95)' },
         },
       },
       animation: {
-        shimmer: 'shimmer 1.5s infinite',
-        'fade-in-up': 'fade-in-up 0.5s ease-out',
-      },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        'spin-slow': 'spin-slow 20s linear infinite',
+        'spin-reverse-slow': 'spin-reverse-slow 25s linear infinite',
+        'pulse-slow': 'pulse-slow 4s ease-in-out infinite',
       },
     },
   },
