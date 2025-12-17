@@ -6,41 +6,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Lock, Mail, Loader2, ArrowRight } from 'lucide-react'
 import GridBackground from '@/components/background/GridBackground'
-
-// --- KOMPONEN RAHASIA: SPOTLIGHT CARD ---
-function SpotlightCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return;
-    const div = divRef.current;
-    const rect = div.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
-
-  return (
-    <div
-      ref={divRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
-      className={`relative overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-2xl backdrop-blur-md transition-all duration-300 dark:border-white/5 dark:bg-slate-900/60 dark:shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] ${className}`}
-    >
-      {/* Spotlight Gradient */}
-      <div
-        className="pointer-events-none absolute -inset-px transition duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(16, 185, 129, 0.15), transparent 40%)`,
-        }}
-      />
-      {/* Konten */}
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
-}
+import SpotlightCard from '@/components/ui/SpotlightCard'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -80,7 +46,7 @@ export default function LoginPage() {
           <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Kembali ke Beranda
         </Link>
 
-        <SpotlightCard className="overflow-hidden">
+        <SpotlightCard className="overflow-hidden" mode="glow">
           
           {/* Header Card dengan Gradient Brand */}
           <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-primary-600 to-emerald-500 p-6 dark:from-primary-900 dark:to-emerald-800">
