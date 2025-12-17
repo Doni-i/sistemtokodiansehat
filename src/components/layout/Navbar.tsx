@@ -13,14 +13,18 @@ export default function Navbar({ isDark, toggleTheme }: NavbarProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-600 to-primary-400 text-white font-bold shadow-lg shadow-primary-500/30">
             DS
           </div>
-          <span className="text-lg font-bold tracking-tight text-secondary-900 dark:text-white">
-            Toko<span className="text-primary-600 dark:text-primary-400">DianSehat</span>
+            <span className="text-lg font-bold tracking-tight text-secondary-900 dark:text-white">
+            Toko
+            <span className="text-red-600 dark:text-red-500">Dian</span>
+            <span className="text-primary-600 dark:text-primary-400">Sehat</span>
           </span>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="hidden text-sm font-medium text-secondary-500 md:block dark:text-secondary-400">
-            Pejaten Branch v2.0
+            Versi 1.0.0
+          </div>
+          <div>
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: colors.emerald, // B(rose, blue, violet)
+        primary: colors.emerald, // (rose, blue, violet)
         secondary: colors.slate,
       },
       backgroundImage: {

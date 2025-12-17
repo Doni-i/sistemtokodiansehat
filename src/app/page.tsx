@@ -39,7 +39,7 @@ export default function Home() {
           {/* Badge Lokasi - Professional Label */}
           <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-700 mb-6 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300">
             <MapPin size={14} className="animate-bounce" />
-            <span>Pusat Distribusi: Pejaten Timur, Jaksel</span>
+            <span>Pejaten Timur, Jakarta Selatan</span>
           </div>
 
           {/* Headline: Emosional & Modern */}
@@ -64,16 +64,12 @@ export default function Home() {
             >
               <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-0" />
               <span className="relative z-10 flex items-center gap-2">
-                Masuk ke Dashboard <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                Dashboard Admin <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </span>
             </Link>
-            
-            <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:text-secondary-900 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
-              <Heart size={18} className="text-red-500 fill-red-500" /> Dedikasi Kami
-            </button>
           </div>
 
-          {/* Tech Specs - PRODUCTION READY LABELS */}
+          {/* Label Untuk Bagian Paling Bawah Halaman */}
            <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 opacity-60 hover:opacity-100 transition-all duration-500 dark:opacity-40 dark:hover:opacity-100">
             <div className="flex items-center gap-2 font-bold text-sm text-secondary-500 dark:text-secondary-300">
 
