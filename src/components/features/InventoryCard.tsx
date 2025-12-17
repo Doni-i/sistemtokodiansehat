@@ -10,7 +10,6 @@ export default function InventoryCard() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      // Mengurangi sensitivitas rotasi agar tidak terlalu ekstrim
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
       setMousePosition({ x, y });
@@ -27,30 +26,28 @@ export default function InventoryCard() {
   }, []);
 
   return (
-    // Wrapper Luar
+    // Wrapper Utama
     <div className="relative z-50 mt-20 mb-10 lg:mt-0 lg:mb-0 lg:h-[600px] lg:w-full lg:max-w-2xl flex items-center justify-center perspective-1000">
        
-       {/* AMBIENT GLOW */}
+       {/* GLOBAL AMBIENT GLOW (Background Utama) */}
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-emerald-500/10 blur-[80px] rounded-full animate-pulse dark:bg-emerald-500/5 pointer-events-none" />
 
        {/* KARTU CONTAINER (Logic 3D) */}
-       {/* Note: Kita menghapus styling visual (border/bg/blur) dari div ini dan memindahkannya ke layer 'Background' di bawah */}
        <div 
         ref={containerRef}
         className="group/card relative w-[320px] sm:w-[420px] transition-transform duration-100 ease-out will-change-transform"
         style={{
-          transform: `rotateY(${mousePosition.x * 8}deg) rotateX(${mousePosition.y * -8}deg)`, // Rotasi diperhalus (8deg)
+          transform: `rotateY(${mousePosition.x * 8}deg) rotateX(${mousePosition.y * -8}deg)`,
           transformStyle: 'preserve-3d'
         }}
       >
         
-        {/* --- LAYER 1: BACKGROUND KACA (Visual Card) --- */}
-        {/* Dipisah agar backdrop-blur tidak memotong elemen floating anak (seperti badge) */}
+        {/* --- LAYER 1: BACKGROUND KARTU UTAMA --- */}
         <div 
           className="absolute inset-0 rounded-[2rem] border border-white/60 bg-white/40 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_0_60px_-15px_rgba(16,185,129,0.3)]"
           style={{ transform: 'translateZ(0px)' }}
         >
-          {/* Spotlight Effect pada Background */}
+          {/* Spotlight Effect Kartu Utama */}
           <div 
             className="pointer-events-none absolute -inset-px rounded-[2rem] opacity-0 transition duration-500 group-hover/card:opacity-100"
             style={{ 
@@ -59,7 +56,7 @@ export default function InventoryCard() {
           />
         </div>
 
-        {/* --- LAYER 2: KONTEN KARTU (Padding & Content) --- */}
+        {/* --- LAYER 2: KONTEN KARTU UTAMA --- */}
         <div className="relative p-8">
             {/* Header Icons */}
             <div className="mb-8 flex items-center justify-between" style={{ transform: 'translateZ(20px)' }}>
@@ -132,11 +129,17 @@ export default function InventoryCard() {
         </div>
 
         {/* --- LAYER 3: FLOATING BADGE (NIB) --- */}
-        {/* Sekarang ini adalah SIBLING dari background kaca, bukan child-nya, sehingga Z-index berfungsi normal */}
         <div 
-          className="hidden md:block absolute -right-20 top-24 rounded-2xl bg-white p-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] border border-white/50 animate-[float_4s_ease-in-out_infinite] dark:bg-slate-800 dark:border-white/10"
-          style={{ transform: 'translateZ(80px)' }} // 80px agar lebih menonjol di atas kartu
+          className="hidden md:block absolute -right-20 top-24 rounded-2xl bg-white/90 p-4 border border-white/50 animate-[float_4s_ease-in-out_infinite] backdrop-blur-md dark:bg-slate-800/90 dark:border-white/10"
+          // Spotlight Hijau Emerald pada Badge NIB
+          style={{ 
+            transform: 'translateZ(80px)',
+            boxShadow: '0 20px 40px -10px rgba(16, 185, 129, 0.2)' 
+          }} 
         >
+           {/* Ambient Glow */}
+           <div className="absolute inset-0 bg-emerald-500/5 blur-xl rounded-2xl -z-10" />
+
            <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-4 ring-blue-50/50 dark:bg-blue-500/20 dark:text-blue-400 dark:ring-blue-900/30">
                 <FileCheck size={24}/>
