@@ -2,13 +2,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Box, Activity, ShieldCheck, Package, TrendingUp, CheckCircle2 } from 'lucide-react'
+import { Box, Activity, ShieldCheck, Package, TrendingUp, FileCheck } from 'lucide-react'
 
 export default function InventoryCard() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Update posisi mouse dan variabel CSS untuk spotlight
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -26,8 +27,8 @@ export default function InventoryCard() {
   }, []);
 
   return (
-    // Container (w-full max-w-2xl)
-    <div className="relative mt-20 mb-10 lg:mt-0 lg:mb-0 lg:h-[600px] lg:w-full lg:max-w-2xl flex items-center justify-center perspective-1000">
+    // Container utama dengan perspektif 3D
+    <div className="relative z-50 mt-20 mb-10 lg:mt-0 lg:mb-0 lg:h-[600px] lg:w-full lg:max-w-2xl flex items-center justify-center perspective-1000">
        
        {/* AMBIENT GLOW */}
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-emerald-500/10 blur-[80px] rounded-full animate-pulse dark:bg-emerald-500/5 pointer-events-none" />
@@ -35,9 +36,10 @@ export default function InventoryCard() {
        {/* KARTU UTAMA */}
        <div 
         ref={containerRef}
+        // Rotate multiplier dikurangi sedikit (12 -> 10) agar badge tidak mudah terpotong saat rotasi ekstrim
         className="group/card relative w-[320px] sm:w-[420px] rounded-[2rem] border border-white/60 bg-white/40 p-8 shadow-2xl backdrop-blur-xl transition-transform duration-100 ease-out will-change-transform dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_0_60px_-15px_rgba(16,185,129,0.3)]"
         style={{
-          transform: `rotateY(${mousePosition.x * 12}deg) rotateX(${mousePosition.y * -12}deg) translateZ(10px)`,
+          transform: `rotateY(${mousePosition.x * 10}deg) rotateX(${mousePosition.y * -10}deg) translateZ(10px)`,
           transformStyle: 'preserve-3d'
         }}
       >
@@ -118,35 +120,24 @@ export default function InventoryCard() {
             </div>
         </div>
 
-        {/* 4. FLOATING BADGE KANAN */}
-        {/* Hidden di mobile (hidden), Muncul di md (md:block) */}
+        {/* 4. FLOATING BADGE KANAN (NIB) */}
+        {/* Menggunakan translateZ(100px) agar benar-benar melayang di depan kartu utama (mencegah tenggelam) */}
         <div 
-          className="hidden md:block absolute -right-20 top-16 rounded-2xl bg-white p-4 shadow-2xl border border-white/50 animate-[float_4s_ease-in-out_infinite] dark:bg-slate-800 dark:border-white/10"
-          style={{ transform: 'translateZ(80px)' }} 
+          className="hidden md:block absolute -right-16 top-24 rounded-2xl bg-white p-4 shadow-2xl border border-white/50 animate-[float_4s_ease-in-out_infinite] dark:bg-slate-800 dark:border-white/10"
+          style={{ transform: 'translateZ(100px)' }} 
         >
            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400 dark:ring-emerald-900/30">
-                <ShieldCheck size={24}/>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-4 ring-blue-50/50 dark:bg-blue-500/20 dark:text-blue-400 dark:ring-blue-900/30">
+                <FileCheck size={24}/>
               </div>
               <div>
-                <div className="text-sm font-extrabold text-secondary-900 dark:text-white">Terverifikasi</div>
-                <div className="text-[10px] font-medium text-secondary-500 dark:text-secondary-400">Keamanan Data</div>
+                <div className="text-sm font-extrabold text-secondary-900 dark:text-white">Izin Berusaha</div>
+                <div className="text-[10px] font-medium text-secondary-500 dark:text-secondary-400 font-mono mt-0.5 bg-secondary-100 px-1.5 py-0.5 rounded w-fit dark:bg-white/10">
+                  NIB: 0220006731982
+                </div>
               </div>
            </div>
         </div>
-
-        {/* 5. FLOATING BADGE KIRI */}
-        {/* Hidden di mobile (hidden), Muncul di md (md:block) */}
-        <div 
-          className="hidden md:block absolute -left-16 bottom-24 rounded-2xl bg-white p-3 shadow-xl border border-white/50 animate-[float_5s_ease-in-out_infinite_reverse] dark:bg-slate-800 dark:border-white/10"
-          style={{ transform: 'translateZ(60px)' }}
-        >
-           <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-primary-600 dark:text-primary-400"/>
-              <span className="text-xs font-bold text-secondary-700 dark:text-white">Server Stabil 99.9%</span>
-           </div>
-        </div>
-
       </div>
     </div>
   )
