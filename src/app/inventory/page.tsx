@@ -12,7 +12,7 @@ import GridBackground from '@/components/background/GridBackground'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts'
-import SpotlightCard from '@/components/ui/SpotlightCard' // Pastikan import ini ada
+import SpotlightCard from '@/components/ui/SpotlightCard'
 
 export default function InventoryPage() {
   // --- STATE ---
@@ -23,6 +23,27 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  // State khusus untuk waktu server (Jakarta Timezone)
+  const [serverTime, setServerTime] = useState("")
+
+  // Effect untuk menjalankan jam Realtime & Lock Jakarta Timezone
+  useEffect(() => {
+    const updateTime = () => {
+      const timeString = new Date().toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Jakarta', // <--- Lock ke Jakarta Timezone
+        hour12: false
+      });
+      setServerTime(timeString);
+    }
+
+    updateTime(); // Jalankan sekali di awal
+    const interval = setInterval(updateTime, 1000); // Update setiap 1 detik
+
+    return () => clearInterval(interval); // Bersihkan memori saat pindah halaman
+  }, []);
 
   // --- FORM STATE ---
   const [formData, setFormData] = useState({
@@ -238,15 +259,16 @@ export default function InventoryPage() {
             </h1>
             <div className="flex items-center gap-2 text-sm text-secondary-500 dark:text-secondary-400 mt-1">
               <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live System v2.0 • Dian Sehat Pagujaten
+              Versi 1.0.0
             </div>
           </div>
           
           <div className="flex items-center gap-3">
              <div className="hidden md:block text-right mr-4 border-r border-secondary-200 pr-6 dark:border-white/10">
                 <div className="text-[10px] font-bold tracking-widest text-secondary-400 uppercase">Server Time</div>
-                <div className="font-mono font-medium text-secondary-600 dark:text-secondary-300">
-                  {new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})} WIB
+                <div className="font-mono font-medium text-secondary-600 dark:text-secondary-300 min-w-[60px]">
+                  {/* Gunakan state serverTime, atau tampilkan loading strip jika belum siap */}
+                  {serverTime || "--:--"} WIB
                 </div>
              </div>
             <button 
@@ -267,12 +289,9 @@ export default function InventoryPage() {
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="p-3 rounded-xl bg-white/20 backdrop-blur-md shadow-inner"><Package size={28}/></div>
                     <div>
-                        <div className="text-sm font-medium text-primary-100">Total Stok Fisik</div>
+                        <div className="text-sm font-medium text-primary-100">Total Stok</div>
                         <div className="text-4xl font-extrabold tracking-tight mt-1">{totalItem}</div>
                     </div>
-                </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-primary-100/80 font-mono">
-                   <ArrowUpRight size={12}/> +12% dari bulan lalu
                 </div>
             </SpotlightCard>
 
@@ -285,7 +304,7 @@ export default function InventoryPage() {
                         <div className="text-4xl font-bold text-secondary-900 dark:text-white">{lowStock}</div>
                     </div>
                 </div>
-                <div className="mt-4 text-xs text-secondary-400">Item dengan stok &lt; 10 unit</div>
+                <div className="mt-4 text-xs text-secondary-400">Obat dengan stok &lt; 10 unit</div>
             </SpotlightCard>
 
             {/* Card 3: Expired */}
@@ -293,11 +312,11 @@ export default function InventoryPage() {
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"><Calendar size={28}/></div>
                     <div>
-                        <div className="text-sm font-medium text-secondary-500 dark:text-secondary-400">Sudah Expired</div>
+                        <div className="text-sm font-medium text-secondary-500 dark:text-secondary-400">OBAT KADALUARSA</div>
                         <div className="text-4xl font-bold text-secondary-900 dark:text-white">{expiredCount}</div>
                     </div>
                 </div>
-                <div className="mt-4 text-xs text-secondary-400">Segera pisahkan dari rak</div>
+                <div className="mt-4 text-xs text-secondary-400">SEGERA BUANG DARI ETALASE TOKO!!</div>
             </SpotlightCard>
         </div>
 
