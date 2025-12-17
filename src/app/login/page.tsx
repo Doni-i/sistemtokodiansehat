@@ -57,7 +57,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                    <h2 className="text-xl font-bold text-white">Akses Admin</h2>
-                   <p className="text-xs text-primary-100">Silakan masuk untuk mengelola stok.</p>
+                   <p className="text-xs text-primary-100">Silakan masuk untuk mengelola stok obat.</p>
                 </div>
              </div>
           </div>
@@ -120,7 +120,7 @@ export default function LoginPage() {
             </form>
             
             <div className="mt-6 text-center text-xs text-secondary-400">
-              &copy; 2025 Toko Dian Sehat Management System
+              &copy; 2025 Toko Dian Sehat
             </div>
           </div>
         </SpotlightCard>

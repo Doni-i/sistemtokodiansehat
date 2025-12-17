@@ -11,7 +11,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Sistem Inventori Toko Dian Sehat",
-  description: "Enterprise Resource Planning System v2.0",
+  description: "Manajemen Stok Obat Digital",
 };
 
 export default function RootLayout({
