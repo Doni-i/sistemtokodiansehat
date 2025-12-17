@@ -5,7 +5,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Zap, ShieldCheck, Activity, MapPin, Heart } from 'lucide-react'
 
-// Import Komponen Terpisah
 import GridBackground from '@/components/background/GridBackground'
 import Navbar from '@/components/layout/Navbar'
 import InventoryCard from '@/components/features/InventoryCard'
@@ -37,10 +36,10 @@ export default function Home() {
         {/* TEKS & STORYTELLING (KIRI) */}
         <div className="relative z-10 max-w-2xl text-center lg:text-left">
           
-          {/* Badge Lokasi */}
+          {/* Badge Lokasi - Professional Label */}
           <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-700 mb-6 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300">
             <MapPin size={14} className="animate-bounce" />
-            <span>Pejaten Timur, Jakarta Selatan</span>
+            <span>Pusat Distribusi: Pejaten Timur, Jaksel</span>
           </div>
 
           {/* Headline: Emosional & Modern */}
@@ -51,10 +50,10 @@ export default function Home() {
             </span>
           </h1>
 
-          {/* Subtext: Manusiawi (Storytelling) */}
+          {/* Subtext */}
           <p className="text-lg text-secondary-500 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0 dark:text-secondary-400">
-            Bermula dari toko obat sederhana di Jl. Pagujaten, kini <span className="font-semibold text-secondary-900 dark:text-white">Toko Dian Sehat</span> hadir dengan wajah baru. 
-            Sistem manajemen inventori cerdas untuk memastikan obat keluarga Anda selalu tersedia, akurat, dan terpercaya.
+            Bermula dari toko obat sederhana di Jl. Pagujaten, kini <span className="font-semibold text-secondary-900 dark:text-white">Toko Dian Sehat</span> telah bertransformasi. 
+            Menggunakan sistem manajemen terintegrasi untuk menjamin ketersediaan obat keluarga Anda secara akurat dan transparan.
           </p>
 
           {/* Call to Action Buttons */}
@@ -70,23 +69,26 @@ export default function Home() {
             </Link>
             
             <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-8 py-4 text-base font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50 hover:text-secondary-900 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
-              <Heart size={18} className="text-red-500 fill-red-500" /> Perjalanan Kami
+              <Heart size={18} className="text-red-500 fill-red-500" /> Dedikasi Kami
             </button>
           </div>
 
-          {/* Tech Specs*/}
+          {/* Tech Specs - PRODUCTION READY LABELS */}
            <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 opacity-60 hover:opacity-100 transition-all duration-500 dark:opacity-40 dark:hover:opacity-100">
             <div className="flex items-center gap-2 font-bold text-sm text-secondary-500 dark:text-secondary-300">
-                <Zap size={18} className="text-yellow-500 fill-yellow-500"/> v2.0
+
+                <Zap size={18} className="text-yellow-500 fill-yellow-500"/> Efisiensi Tinggi
             </div>
             <div className="flex items-center gap-2 font-bold text-sm text-secondary-500 dark:text-secondary-300">
-                <ShieldCheck size={18} className="text-emerald-500"/> Data Aman
+                <ShieldCheck size={18} className="text-emerald-500"/> Keamanan Terjamin
             </div>
             <div className="flex items-center gap-2 font-bold text-sm text-secondary-500 dark:text-secondary-300">
-                <Activity size={18} className="text-primary-500"/> Data Realtime
+                <Activity size={18} className="text-primary-500"/> Pemantauan Realtime
             </div>
           </div>
         </div>
+
+        {/* KARTU INVENTARIS (KANAN) */}
         <InventoryCard />
 
       </div>
