@@ -12,41 +12,7 @@ import GridBackground from '@/components/background/GridBackground'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts'
-
-// --- KOMPONEN RAHASIA: SPOTLIGHT CARD (Magic Effect) ---
-function SpotlightCard({ children, className = "", noHover = false }: { children: React.ReactNode; className?: string; noHover?: boolean }) {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return;
-    const div = divRef.current;
-    const rect = div.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
-
-  return (
-    <div
-      ref={divRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
-      className={`relative overflow-hidden rounded-3xl border border-secondary-200/60 bg-white/40 shadow-xl backdrop-blur-md transition-all duration-300 dark:border-white/10 dark:bg-slate-900/40 ${className}`}
-    >
-      {/* Spotlight Gradient - Mengikuti Mouse */}
-      <div
-        className="pointer-events-none absolute -inset-px transition duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(16, 185, 129, 0.15), transparent 40%)`,
-        }}
-      />
-      {/* Konten */}
-      <div className="relative z-10 h-full">{children}</div>
-    </div>
-  );
-}
+import SpotlightCard from '@/components/ui/SpotlightCard' // Pastikan import ini ada
 
 export default function InventoryPage() {
   // --- STATE ---
@@ -103,7 +69,6 @@ export default function InventoryPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return router.push('/login')
 
-    // Fetch Stok
     const { data: stok } = await supabase
       .from('stok_obat')
       .select(`
@@ -118,11 +83,9 @@ export default function InventoryPage() {
     
     if (stok) setStokList(stok)
 
-    // Fetch Master Obat
     const { data: obat } = await supabase.from('obat').select('id, nama_obat').order('nama_obat')
     if (obat) setObatList(obat)
 
-    // Fetch Transaksi (Realtime Chart)
     const { data: transaksi } = await supabase
         .from('transaksi_inventori')
         .select('tipe_transaksi, kuantitas, tanggal_waktu')
@@ -194,10 +157,81 @@ export default function InventoryPage() {
       
       <GridBackground />
 
+      {/* MODAL DIPINDAHKAN KE SINI (DI LUAR div konten utama agar z-index aman) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
+            <div className="mb-6 flex items-center justify-between border-b border-secondary-100 pb-4 dark:border-white/10">
+              <h2 className="text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
+                <Package className="text-primary-600"/> Input Barang Masuk
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 text-secondary-400 hover:bg-secondary-100 hover:text-secondary-900 dark:hover:bg-white/10 dark:hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode</label>
+                 <div className="relative">
+                    <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" size={18} />
+                    <input
+                        type="text"
+                        className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 pl-10 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
+                        placeholder="Kosongkan untuk auto-generate..."
+                        value={formData.barcode_batch}
+                        onChange={e => setFormData({...formData, barcode_batch: e.target.value})}
+                      />
+                 </div>
+              </div>
+              <div>
+                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Pilih Obat</label>
+                 <div className="relative">
+                   <select required className="block w-full appearance-none rounded-xl border border-secondary-200 bg-secondary-50 p-3 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
+                    value={formData.id_obat} onChange={e => setFormData({...formData, id_obat: e.target.value})}>
+                    <option value="">-- Cari Nama Obat --</option>
+                    {obatList.map(obat => (
+                      <option key={obat.id} value={obat.id} className="dark:bg-slate-900">{obat.nama_obat}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary-500"><ChevronDown size={16}/></div>
+                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">No. Batch</label>
+                  <input type="text" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
+                    placeholder="e.g. B-001" value={formData.no_batch} onChange={e => setFormData({...formData, no_batch: e.target.value})} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Tgl. Kedaluwarsa</label>
+                  <input type="date" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
+                    value={formData.tanggal_kedaluwarsa} onChange={e => setFormData({...formData, tanggal_kedaluwarsa: e.target.value})} />
+                </div>
+              </div>
+              <div>
+                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Jumlah Stok</label>
+                 <div className="relative">
+                    <input type="number" required min="1" className="block w-full rounded-xl border-primary-200 bg-primary-50/50 p-4 text-2xl font-bold text-primary-700 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-primary-900/50 dark:bg-primary-900/10 dark:text-primary-400 dark:focus:bg-slate-800" 
+                      value={formData.jumlah_stok} onChange={e => setFormData({...formData, jumlah_stok: e.target.value})} />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary-400">UNIT</div>
+                 </div>
+              </div>
+              <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-secondary-100 dark:border-white/10">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-secondary-200 px-6 py-3 font-medium text-secondary-600 hover:bg-secondary-50 transition-colors dark:border-white/10 dark:text-secondary-300 dark:hover:bg-white/5">Batalkan</button>
+                <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 font-bold text-white shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 disabled:opacity-70 dark:bg-primary-500">
+                  {submitting ? 'Menyimpan...' : <><Save size={18} /> Simpan Data</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* KONTEN UTAMA */}
       <div className="relative z-10 mx-auto max-w-7xl p-4 md:p-8 space-y-8">
         
         {/* --- HEADER (GLASS) --- */}
-        <SpotlightCard className="flex flex-col justify-between gap-4 md:flex-row md:items-center p-6">
+        <SpotlightCard className="flex flex-col justify-between gap-4 md:flex-row md:items-center p-6" mode="glow">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-secondary-900 dark:text-white">
               Dashboard <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-400">Inventori</span>
@@ -228,7 +262,7 @@ export default function InventoryPage() {
         {/* --- STATS CARDS (SPOTLIGHT EFFECT!) --- */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Card 1: Total Aset */}
-            <SpotlightCard className="p-6 bg-gradient-to-br from-primary-600/90 to-emerald-600/90 text-white dark:from-primary-900/80 dark:to-emerald-900/80 border-none">
+            <SpotlightCard className="p-6 bg-gradient-to-br from-primary-600/90 to-emerald-600/90 text-white dark:from-primary-900/80 dark:to-emerald-900/80 border-none" mode="default">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/20 blur-2xl"></div>
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="p-3 rounded-xl bg-white/20 backdrop-blur-md shadow-inner"><Package size={28}/></div>
@@ -243,7 +277,7 @@ export default function InventoryPage() {
             </SpotlightCard>
 
             {/* Card 2: Restock */}
-            <SpotlightCard className="p-6">
+            <SpotlightCard className="p-6" mode="glow">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"><AlertTriangle size={28}/></div>
                     <div>
@@ -255,7 +289,7 @@ export default function InventoryPage() {
             </SpotlightCard>
 
             {/* Card 3: Expired */}
-            <SpotlightCard className="p-6">
+            <SpotlightCard className="p-6" mode="glow">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"><Calendar size={28}/></div>
                     <div>
@@ -268,7 +302,7 @@ export default function InventoryPage() {
         </div>
 
         {/* --- GRAFIK RGB (SPOTLIGHT WRAPPER) --- */}
-        <SpotlightCard className="p-6">
+        <SpotlightCard className="p-6" mode="glow">
           <div className="flex items-center justify-between mb-6">
              <div>
                 <h3 className="text-lg font-bold text-secondary-900 dark:text-white flex items-center gap-2">
@@ -340,7 +374,7 @@ export default function InventoryPage() {
         </div>
 
         {/* --- TABEL (SPOTLIGHT WRAPPER JUGA) --- */}
-        <SpotlightCard className="overflow-hidden p-0 border border-secondary-200 dark:border-white/10">
+        <SpotlightCard className="overflow-hidden p-0 border border-secondary-200 dark:border-white/10" mode="glow">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-secondary-200 dark:divide-white/5">
               <thead className="bg-secondary-50/80 dark:bg-white/5 backdrop-blur-sm">
@@ -417,77 +451,6 @@ export default function InventoryPage() {
             </table>
           </div>
         </SpotlightCard>
-
-        {/* MODAL INPUT (Tetap Sama) */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
-            <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
-              <div className="mb-6 flex items-center justify-between border-b border-secondary-100 pb-4 dark:border-white/10">
-                <h2 className="text-xl font-bold text-secondary-900 dark:text-white flex items-center gap-2">
-                  <Package className="text-primary-600"/> Input Barang Masuk
-                </h2>
-                <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 text-secondary-400 hover:bg-secondary-100 hover:text-secondary-900 dark:hover:bg-white/10 dark:hover:text-white transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* ... (Isi Form Sama) ... */}
-                <div>
-                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Scan Barcode</label>
-                   <div className="relative">
-                      <ScanBarcode className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400" size={18} />
-                      <input
-                          type="text"
-                          className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 pl-10 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
-                          placeholder="Kosongkan untuk auto-generate..."
-                          value={formData.barcode_batch}
-                          onChange={e => setFormData({...formData, barcode_batch: e.target.value})}
-                        />
-                   </div>
-                </div>
-                <div>
-                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Pilih Obat</label>
-                   <div className="relative">
-                     <select required className="block w-full appearance-none rounded-xl border border-secondary-200 bg-secondary-50 p-3 text-secondary-900 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-primary-500 dark:focus:bg-slate-800"
-                      value={formData.id_obat} onChange={e => setFormData({...formData, id_obat: e.target.value})}>
-                      <option value="">-- Cari Nama Obat --</option>
-                      {obatList.map(obat => (
-                        <option key={obat.id} value={obat.id} className="dark:bg-slate-900">{obat.nama_obat}</option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary-500"><ChevronDown size={16}/></div>
-                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">No. Batch</label>
-                    <input type="text" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
-                      placeholder="e.g. B-001" value={formData.no_batch} onChange={e => setFormData({...formData, no_batch: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Tgl. Kedaluwarsa</label>
-                    <input type="date" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
-                      value={formData.tanggal_kedaluwarsa} onChange={e => setFormData({...formData, tanggal_kedaluwarsa: e.target.value})} />
-                  </div>
-                </div>
-                <div>
-                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Jumlah Stok</label>
-                   <div className="relative">
-                      <input type="number" required min="1" className="block w-full rounded-xl border-primary-200 bg-primary-50/50 p-4 text-2xl font-bold text-primary-700 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-primary-900/50 dark:bg-primary-900/10 dark:text-primary-400 dark:focus:bg-slate-800" 
-                        value={formData.jumlah_stok} onChange={e => setFormData({...formData, jumlah_stok: e.target.value})} />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary-400">UNIT</div>
-                   </div>
-                </div>
-                <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-secondary-100 dark:border-white/10">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-secondary-200 px-6 py-3 font-medium text-secondary-600 hover:bg-secondary-50 transition-colors dark:border-white/10 dark:text-secondary-300 dark:hover:bg-white/5">Batalkan</button>
-                  <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 font-bold text-white shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 disabled:opacity-70 dark:bg-primary-500">
-                    {submitting ? 'Menyimpan...' : <><Save size={18} /> Simpan Data</>}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
