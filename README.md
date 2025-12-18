@@ -1,10 +1,10 @@
 
 # 🌿 Sistem Manajemen Inventori Toko Dian Sehat 
 
-![Toko Dian Sehat Dashboard](<blockquote class="imgur-embed-pub" lang="en" data-id="a/56b2BDE" data-context="false" ><a href="//imgur.com/a/56b2BDE"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>)
+(<blockquote class="imgur-embed-pub" lang="en" data-id="a/56b2BDE" data-context="false" ><a href="//imgur.com/a/56b2BDE"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>)
 
 **Sistem manajemen inventori obat digital untuk Toko Dian Sehat, Pagujaten, Jakarta Selatan.**
-Dibangun untuk menggantikan catatan manual (buku stok & nota kertas) dengan web app modern. Fokus: Tracking stok masuk, alert expired, dan partial FEFO (First Expired First Out)—prioritas keluarkan obat mendekati kadaluarsa. Phase 1: Input stok & monitoring. Next: Full out transaksi & barcode scan.
+Dibangun untuk menggantikan catatan manual (buku stok & nota kertas) dengan web app modern. Fokus: Tracking stok masuk, alert expired, dan FEFO (First Expired First Out).
 
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=flat&logo=next.js)](https://nextjs.org/) [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?style=flat&logo=supabase)](https://supabase.com/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v3-blue?style=flat&logo=tailwindcss)](https://tailwindcss.com/) [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-%23000000.svg?style=flat&logo=vercel)](https://sistemtokodiansehat-lac.vercel.app) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
