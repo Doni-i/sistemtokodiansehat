@@ -289,18 +289,18 @@ export default function InventoryPage() {
                 <div className="flex items-center gap-4 relative z-10">
                     <div className="p-3 rounded-xl bg-white/20 backdrop-blur-md shadow-inner"><Package size={28}/></div>
                     <div>
-                        <div className="text-sm font-medium text-primary-100">Total Stok</div>
+                        <div className="text-sm font-medium text-primary-100">Total Stok Obat</div>
                         <div className="text-4xl font-extrabold tracking-tight mt-1">{totalItem}</div>
                     </div>
                 </div>
             </SpotlightCard>
 
-            {/* Card 2: Restock */}
+            {/* Card 2: Restok */}
             <SpotlightCard className="p-6" mode="glow">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"><AlertTriangle size={28}/></div>
                     <div>
-                        <div className="text-sm font-medium text-secondary-500 dark:text-secondary-400">Perlu Restock</div>
+                        <div className="text-sm font-medium text-secondary-500 dark:text-secondary-400">Stok Obat Menipis</div>
                         <div className="text-4xl font-bold text-secondary-900 dark:text-white">{lowStock}</div>
                     </div>
                 </div>
