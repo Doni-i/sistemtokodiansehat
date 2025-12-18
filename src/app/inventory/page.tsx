@@ -22,25 +22,25 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false) // Untuk masuk
-  const [isKeluarModalOpen, setIsKeluarModalOpen] = useState(false) // NEW: Modal keluar
+  const [isKeluarModalOpen, setIsKeluarModalOpen] = useState(false) // Modal keluar
   const [submitting, setSubmitting] = useState(false)
 
-  // NEW: Form state untuk keluar stok
+  // Form state untuk keluar stok
   const [keluarFormData, setKeluarFormData] = useState({
     id_obat: '',
     qty_keluar: ''
   })
 
-  // State khusus untuk waktu server (Jakarta Timezone)
+  // State khusus untuk waktu server (Jakarta)
   const [serverTime, setServerTime] = useState("")
 
-  // Effect untuk menjalankan jam Realtime & Lock Jakarta Timezone
+  // Efek untuk jam Realtime & Zona waktu Jakarta
   useEffect(() => {
     const updateTime = () => {
       const timeString = new Date().toLocaleTimeString('id-ID', {
         hour: '2-digit',
         minute: '2-digit',
-        timeZone: 'Asia/Jakarta', // <--- Lock ke Jakarta Timezone
+        timeZone: 'Asia/Jakarta', 
         hour12: false
       });
       setServerTime(timeString);
@@ -65,7 +65,7 @@ export default function InventoryPage() {
   const router = useRouter()
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // --- 1. proses data untuk chart ---
+  // --- 1. DATA PROCESSING FOR CHART ---
   const processChartData = (transactions: any[]) => {
     const monthlyStats: Record<string, { masuk: number; keluar: number; order: number }> = {}
     transactions.forEach(trx => {
@@ -91,7 +91,7 @@ export default function InventoryPage() {
         .sort((a, b) => a.order - b.order)
   }
 
-  // --- 2. fetch data (sortir berdasarkan 'expired ASC' untuk display FEFO) ---
+  // --- 2. FETCH DATA (MODIF: Sort by expired ASC for FEFO display) ---
   const fetchData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -107,7 +107,7 @@ export default function InventoryPage() {
         )
       `)
       .is('dihapus_pada', null) 
-      .order('batch_obat(tanggal_kedaluwarsa)', { ascending: true }) // Sort FEFO (earliest expired)
+      .order('batch_obat(tanggal_kedaluwarsa)', { ascending: true }) // NEW: Sort FEFO (earliest expired first)
     
     if (stok) setStokList(stok)
 
@@ -129,7 +129,7 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // --- 3. actions untuk masuk ---
+  // --- 3. ACTIONS untuk Masuk (tetap) ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -149,18 +149,18 @@ export default function InventoryPage() {
       })
 
       if (error) throw error
-      alert('Stok Berhasil Ditambahkan!')
+      alert('✅ Stok Berhasil Ditambahkan!')
       setIsModalOpen(false)
       setFormData({ id_obat: '', no_batch: '', barcode_batch: '', tanggal_kedaluwarsa: '', jumlah_stok: '' })
       fetchData()
     } catch (err: any) {
-      alert('Gagal: ' + err.message)
+      alert('❌ Gagal: ' + err.message)
     } finally {
       setSubmitting(false)
     }
   }
 
-  // NEW: Handle Keluar Stok (FEFO Full)
+  // FIXED: Handle Keluar Stok (FEFO Full) - Tambah query admin_id
   const handleKeluarStok = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -168,19 +168,30 @@ export default function InventoryPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Sesi habis.")
 
+      // NEW: Query profil_admin.id berdasarkan auth_id = user.id
+      const { data: adminData, error: adminError } = await supabase
+        .from('profil_admin')
+        .select('id')
+        .eq('auth_id', user.id)
+        .single()
+
+      if (adminError || !adminData) throw new Error("Admin tidak terdaftar atau sesi invalid.")
+
+      const adminId = adminData.id // Ini UUID dari profil_admin.id
+
       const { error } = await supabase.rpc('kurangi_stok_fefo', {
         p_id_obat: parseInt(keluarFormData.id_obat),
         p_qty_keluar: parseInt(keluarFormData.qty_keluar),
-        p_id_user: user.id
+        p_id_user: adminId // FIXED: Gunakan profil_admin.id, bukan user.id auth
       })
 
       if (error) throw error
-      alert('Stok Berhasil Dikeluarkan!')
+      alert('✅ Stok Berhasil Dikeluarkan (FEFO Applied)!')
       setIsKeluarModalOpen(false)
       setKeluarFormData({ id_obat: '', qty_keluar: '' })
       fetchData() // Refresh stok & chart
     } catch (err: any) {
-      alert('Gagal: ' + err.message)
+      alert('❌ Gagal: ' + err.message)
     } finally {
       setSubmitting(false)
     }
@@ -211,7 +222,7 @@ export default function InventoryPage() {
       
       <GridBackground />
 
-      {/* modal di luar div konten utama agar z-index aman */}
+      {/* MODAL MASUK */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
           <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
@@ -281,7 +292,7 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* modal keluar stok*/}
+      {/* NEW: MODAL KELUAR STOK */}
       {isKeluarModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-secondary-900/40 p-4 backdrop-blur-md transition-all">
           <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-300 dark:bg-slate-900 border border-white/20 ring-1 ring-black/5">
@@ -326,10 +337,10 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* konten utama */}
+      {/* KONTEN UTAMA */}
       <div className="relative z-10 mx-auto max-w-7xl p-4 md:p-8 space-y-8">
         
-        {/* --- header kaca --- */}
+        {/* --- HEADER (GLASS) --- */}
         <SpotlightCard className="flex flex-col justify-between gap-4 md:flex-row md:items-center p-6" mode="glow">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-secondary-900 dark:text-white">
@@ -345,7 +356,7 @@ export default function InventoryPage() {
              <div className="hidden md:block text-right mr-4 border-r border-secondary-200 pr-6 dark:border-white/10">
                 <div className="text-[10px] font-bold tracking-widest text-secondary-400 uppercase">Server Time</div>
                 <div className="font-mono font-medium text-secondary-600 dark:text-secondary-300 min-w-[60px]">
-                  {/* waktu */}
+                  {/* Gunakan state serverTime, atau tampilkan loading strip jika belum siap */}
                   {serverTime || "--:--"} WIB
                 </div>
              </div>
@@ -359,7 +370,7 @@ export default function InventoryPage() {
           </div>
         </SpotlightCard>
 
-        {/* --- kartu stats (atau card stats) --- */}
+        {/* --- STATS CARDS (SPOTLIGHT EFFECT!) --- */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Card 1: Total Aset */}
             <SpotlightCard className="p-6 bg-gradient-to-br from-primary-600/90 to-emerald-600/90 text-white dark:from-primary-900/80 dark:to-emerald-900/80 border-none" mode="default">
@@ -398,7 +409,7 @@ export default function InventoryPage() {
             </SpotlightCard>
         </div>
 
-        {/* --- grafik --- */}
+        {/* --- GRAFIK RGB (SPOTLIGHT WRAPPER) --- */}
         <SpotlightCard className="p-6" mode="glow">
           <div className="flex items-center justify-between mb-6">
              <div>
@@ -444,7 +455,7 @@ export default function InventoryPage() {
           </div>
         </SpotlightCard>
 
-        {/* --- toolbar --- */}
+        {/* --- TOOLBAR (MODIF: Tambah button Keluar Stok) --- */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
              <div className="relative w-full sm:w-96 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-secondary-400 group-focus-within:text-primary-500 transition-colors" />
@@ -458,7 +469,7 @@ export default function InventoryPage() {
                 />
              </div>
              
-             {/* tombol silau */}
+             {/* SHIMMERING BUTTON */}
              <button 
                 onClick={() => setIsModalOpen(true)}
                 className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary-600 px-6 py-3 text-white font-bold shadow-lg shadow-primary-500/30 hover:bg-primary-700 hover:scale-105 transition-all active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
@@ -469,7 +480,7 @@ export default function InventoryPage() {
                 </span>
               </button>
 
-              {/* tombol keluar stok */}
+              {/* NEW: Button Keluar Stok */}
               <button 
                 onClick={() => setIsKeluarModalOpen(true)}
                 className="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-red-600 px-6 py-3 text-white font-bold shadow-lg shadow-red-500/30 hover:bg-red-700 hover:scale-105 transition-all active:scale-95"
@@ -481,7 +492,7 @@ export default function InventoryPage() {
               </button>
         </div>
 
-        {/* --- tabel --- */}
+        {/* --- TABEL (SPOTLIGHT WRAPPER JUGA) --- */}
         <SpotlightCard className="overflow-hidden p-0 border border-secondary-200 dark:border-white/10" mode="glow">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-secondary-200 dark:divide-white/5">
