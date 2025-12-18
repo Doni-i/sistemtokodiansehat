@@ -1,7 +1,7 @@
 
 # 🌿 Sistem Manajemen Inventori Toko Dian Sehat 
 
-(<blockquote class="imgur-embed-pub" lang="en" data-id="a/56b2BDE" data-context="false" ><a href="//imgur.com/a/56b2BDE"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>)
+([<blockquote class="imgur-embed-pub" lang="en" data-id="a/56b2BDE" data-context="false" ><a href="//imgur.com/a/56b2BDE"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>](https://imgur.com/a/56b2BDE))
 
 **Sistem manajemen inventori obat digital untuk Toko Dian Sehat, Pagujaten, Jakarta Selatan.**
 Dibangun untuk menggantikan catatan manual (buku stok & nota kertas) dengan web app modern. Fokus: Tracking stok masuk, alert expired, dan FEFO (First Expired First Out).
