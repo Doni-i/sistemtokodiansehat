@@ -91,25 +91,47 @@ export default function InventoryPage() {
         .sort((a, b) => a.order - b.order)
   }
 
-  // --- 2. FETCH DATA (MODIF: Sort by expired ASC for FEFO display) ---
+  // --- 2. FETCH DATA (PERBAIKAN: Hapus !inner dan sort client-side) ---
   const fetchData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return router.push('/login')
 
-    const { data: stok } = await supabase
+    // Query Stok tanpa !inner agar lebih aman
+    const { data: stok, error } = await supabase
       .from('stok_obat')
       .select(`
-        id, jumlah_stok, dihapus_pada,
-        batch_obat!inner (
-          id, no_batch, tanggal_kadaluarsa, barcode_batch,
-          obat (id, nama_obat, satuan, harga_jual)
+        id, 
+        jumlah_stok, 
+        dihapus_pada,
+        batch_obat (
+          id, 
+          no_batch, 
+          tanggal_kadaluarsa, 
+          barcode_batch,
+          obat (
+             id, 
+             nama_obat, 
+             satuan, 
+             harga_jual
+          )
         )
       `)
       .is('dihapus_pada', null) 
-      .order('batch_obat(tanggal_kadaluarsa)', { ascending: true }) // NEW: Sort FEFO (earliest expired first)
     
-    if (stok) setStokList(stok)
+    if (error) {
+        console.error("Error Fetch Stok:", error.message)
+    }
+
+    if (stok) {
+        // Sort Manual di Client Side (FEFO) - Expired paling dekat di atas
+        const sortedStok = stok.sort((a: any, b: any) => {
+            const dateA = new Date(a.batch_obat?.tanggal_kadaluarsa || 0).getTime();
+            const dateB = new Date(b.batch_obat?.tanggal_kadaluarsa || 0).getTime();
+            return dateA - dateB;
+        });
+        setStokList(sortedStok)
+    }
 
     const { data: obat } = await supabase.from('obat').select('id, nama_obat').order('nama_obat')
     if (obat) setObatList(obat)
