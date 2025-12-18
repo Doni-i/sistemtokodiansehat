@@ -57,7 +57,7 @@ export default function InventoryPage() {
     id_obat: '',
     no_batch: '',
     barcode_batch: '',
-    tanggal_kedaluwarsa: '',
+    tanggal_kadaluarsa: '',
     jumlah_stok: ''
   })
 
@@ -102,12 +102,12 @@ export default function InventoryPage() {
       .select(`
         id, jumlah_stok, dihapus_pada,
         batch_obat!inner (
-          id, no_batch, tanggal_kedaluwarsa, barcode_batch,
+          id, no_batch, tanggal_kadaluarsa, barcode_batch,
           obat (id, nama_obat, satuan, harga_jual)
         )
       `)
       .is('dihapus_pada', null) 
-      .order('batch_obat(tanggal_kedaluwarsa)', { ascending: true }) // NEW: Sort FEFO (earliest expired first)
+      .order('batch_obat(tanggal_kadaluarsa)', { ascending: true }) // NEW: Sort FEFO (earliest expired first)
     
     if (stok) setStokList(stok)
 
@@ -143,7 +143,7 @@ export default function InventoryPage() {
         p_id_obat: parseInt(formData.id_obat),
         p_no_batch: formData.no_batch,
         p_barcode_batch: smartBarcode,
-        p_expired: formData.tanggal_kedaluwarsa,
+        p_expired: formData.tanggal_kadaluarsa,
         p_qty: parseInt(formData.jumlah_stok),
         p_id_user: user.id
       })
@@ -151,7 +151,7 @@ export default function InventoryPage() {
       if (error) throw error
       alert('✅ Stok Berhasil Ditambahkan!')
       setIsModalOpen(false)
-      setFormData({ id_obat: '', no_batch: '', barcode_batch: '', tanggal_kedaluwarsa: '', jumlah_stok: '' })
+      setFormData({ id_obat: '', no_batch: '', barcode_batch: '', tanggal_kadaluarsa: '', jumlah_stok: '' })
       fetchData()
     } catch (err: any) {
       alert('❌ Gagal: ' + err.message)
@@ -186,7 +186,7 @@ export default function InventoryPage() {
       })
 
       if (error) throw error
-      alert('✅ Stok Berhasil Dikeluarkan (FEFO Applied)!')
+      alert('✅ Stok Berhasil Dikeluarkan!')
       setIsKeluarModalOpen(false)
       setKeluarFormData({ id_obat: '', qty_keluar: '' })
       fetchData() // Refresh stok & chart
@@ -215,7 +215,7 @@ export default function InventoryPage() {
 
   const totalItem = stokList.reduce((acc, curr) => acc + curr.jumlah_stok, 0)
   const lowStock = stokList.filter(item => item.jumlah_stok < 10).length
-  const expiredCount = stokList.filter(item => new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date()).length
+  const expiredCount = stokList.filter(item => new Date(item.batch_obat?.tanggal_kadaluarsa) < new Date()).length
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-white font-sans text-secondary-900 selection:bg-primary-500 selection:text-white dark:bg-slate-950 dark:text-white transition-colors duration-500">
@@ -268,9 +268,9 @@ export default function InventoryPage() {
                     placeholder="e.g. B-001" value={formData.no_batch} onChange={e => setFormData({...formData, no_batch: e.target.value})} />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Tgl. Kedaluwarsa</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-secondary-500 dark:text-secondary-400">Tgl. kadaluarsa</label>
                   <input type="date" required className="block w-full rounded-xl border border-secondary-200 bg-secondary-50 p-3 outline-none focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-800" 
-                    value={formData.tanggal_kedaluwarsa} onChange={e => setFormData({...formData, tanggal_kedaluwarsa: e.target.value})} />
+                    value={formData.tanggal_kadaluarsa} onChange={e => setFormData({...formData, tanggal_kadaluarsa: e.target.value})} />
                 </div>
               </div>
               <div>
@@ -510,7 +510,7 @@ export default function InventoryPage() {
                    <tr><td colSpan={5} className="p-12 text-center text-secondary-500 animate-pulse">Sedang memuat data dari satelit...</td></tr>
                 ) : filteredData.length > 0 ? (
                   filteredData.map((item) => {
-                    const isExpired = new Date(item.batch_obat?.tanggal_kedaluwarsa) < new Date();
+                    const isExpired = new Date(item.batch_obat?.tanggal_kadaluarsa) < new Date();
                     return (
                     <tr key={item.id} className="group hover:bg-primary-50/50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4">
@@ -537,7 +537,7 @@ export default function InventoryPage() {
                             : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
                         }`}>
                           {isExpired ? <AlertTriangle size={12}/> : <Calendar size={12}/>}
-                          {new Date(item.batch_obat?.tanggal_kedaluwarsa).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
+                          {new Date(item.batch_obat?.tanggal_kadaluarsa).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                         </div>
                       </td>
                       <td className="px-6 py-4">
